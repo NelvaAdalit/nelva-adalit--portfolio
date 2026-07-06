@@ -109,18 +109,11 @@ let inMemoryProjects = [...DEFAULT_PROJECTS];
 let inMemoryCerts = [...DEFAULT_CERTIFICATIONS];
 
 // --- Initialization Wrapper ---
-const init = async () => {
+const init = () => {
   // 1. Initialize Supabase
   initSupabase();
 
-  // 2. Check Authentication Session
-  await checkAuthSession();
-
-  // 3. Render Dashboard grids
-  await renderProjects();
-  await renderCertifications();
-
-  // 4. Setup Components & Events
+  // 2. Setup Components & Events (Synchronously to prevent UI block)
   const steps = [
     { name: "Project Filters", fn: initProjectFilters },
     { name: "Mobile Menu", fn: initMobileMenu },
@@ -142,6 +135,9 @@ const init = async () => {
     }
   });
 
+  // 3. Load Data & Render asynchronously in the background
+  loadDataAndRender();
+
   // Render icons
   try {
     if (typeof lucide !== 'undefined') {
@@ -157,6 +153,29 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
+}
+
+/**
+ * Loads DB session and renders components in the background
+ */
+async function loadDataAndRender() {
+  try {
+    await checkAuthSession();
+  } catch (e) {
+    console.warn("Auth check failed", e);
+  }
+
+  try {
+    await renderProjects();
+  } catch (e) {
+    console.error("Projects grid render failed", e);
+  }
+
+  try {
+    await renderCertifications();
+  } catch (e) {
+    console.error("Certifications grid render failed", e);
+  }
 }
 
 // ==========================================================================
@@ -226,15 +245,8 @@ function updateAdminUI(loggedIn) {
 // 2. SUPABASE FILE STORAGE (UPLOADS BUCKET)
 // ==========================================================================
 
-/**
- * Uploads a file to Supabase Storage bucket 'portfolio'
- * @param {File} file 
- * @param {string} folderFolder Name of subfolder (e.g. 'projects', 'certs')
- * @returns {string} Public Url of the uploaded image
- */
 async function uploadFileToStorage(file, folder = 'projects') {
   if (!supabaseClient) {
-    // If Supabase is not connected, fallback to local Blob URL for preview
     return URL.createObjectURL(file);
   }
 
@@ -243,7 +255,6 @@ async function uploadFileToStorage(file, folder = 'projects') {
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
 
-    // Upload to 'portfolio' bucket
     const { data, error } = await supabaseClient.storage
       .from('portfolio')
       .upload(filePath, file, {
@@ -253,7 +264,6 @@ async function uploadFileToStorage(file, folder = 'projects') {
 
     if (error) throw error;
 
-    // Get public Url
     const { data: { publicUrl } } = supabaseClient.storage
       .from('portfolio')
       .getPublicUrl(filePath);
@@ -265,9 +275,6 @@ async function uploadFileToStorage(file, folder = 'projects') {
   }
 }
 
-/**
- * Setups live preview images for file uploads in the modals
- */
 function initFileUploadPreviews() {
   const setupPreview = (fileInputId, imgId, containerId, hiddenInputId) => {
     const fileInput = document.getElementById(fileInputId);
@@ -285,7 +292,6 @@ function initFileUploadPreviews() {
           previewImg.src = event.target.result;
           container.style.display = 'block';
           if (hiddenInput) {
-            // Put a temporary indicator so form validation knows a file is pending
             hiddenInput.value = "PENDING_FILE_UPLOAD";
           }
         };
@@ -634,14 +640,12 @@ function getTechIcon(tech) {
 async function seedSupabaseDataIfEmpty() {
   if (!supabaseClient) return;
   try {
-    // 1. Projects seed check
     const { data: projData } = await supabaseClient.from('proyectos').select('id').limit(1);
     if (projData && projData.length === 0) {
       await supabaseClient.from('proyectos').insert(DEFAULT_PROJECTS);
       console.log("Seeded default projects to Supabase.");
     }
 
-    // 2. Certifications seed check
     const { data: certData } = await supabaseClient.from('certificaciones').select('id').limit(1);
     if (certData && certData.length === 0) {
       await supabaseClient.from('certificaciones').insert(DEFAULT_CERTIFICATIONS);
@@ -745,7 +749,6 @@ function initAuthForm() {
       loginModal.style.display = 'none';
       form.reset();
 
-      // Seed tables if empty on first login
       await seedSupabaseDataIfEmpty();
 
       await renderProjects();
@@ -806,7 +809,6 @@ async function openProjectModal(id = null) {
       if (code) code.value = proj.codeLink || '';
       if (demo) demo.value = proj.demoLink || '';
 
-      // Set image preview if exists
       if (proj.image && previewContainer) {
         const previewImg = document.getElementById('proj-image-preview');
         if (previewImg) {
@@ -843,7 +845,6 @@ function initProjectForm() {
     const codeLink = document.getElementById('proj-code').value.trim();
     const demoLink = document.getElementById('proj-demo').value.trim();
     
-    // File upload elements
     const fileInput = document.getElementById('proj-image-file');
     let imageUrl = document.getElementById('proj-image').value;
 
@@ -853,7 +854,6 @@ function initProjectForm() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     try {
-      // 1. Upload file if selected
       if (fileInput && fileInput.files[0]) {
         imageUrl = await uploadFileToStorage(fileInput.files[0], 'projects');
       }
@@ -889,7 +889,6 @@ function initProjectForm() {
         }
         success = true;
       } else {
-        // Local storage CRUD fallback
         let projects = await getProjects();
         if (id) {
           projects = projects.map(p => {
@@ -927,6 +926,14 @@ function initProjectForm() {
       if (typeof lucide !== 'undefined') lucide.createIcons();
     }
   });
+}
+
+function saveLocalProjects(projects) {
+  try {
+    localStorage.setItem('nelva_projects', JSON.stringify(projects));
+  } catch (e) {
+    inMemoryProjects = projects;
+  }
 }
 
 async function deleteProject(id) {
