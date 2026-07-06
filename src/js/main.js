@@ -1,6 +1,6 @@
 /* ==========================================================================
-   NELVA ADALIT PORTFOLIO - LOGIC & INTERACTION (WITH CRUD & LIGHTBOX)
-   Contains: Projects CRUD, LocalStorage DB, Lightbox, Mobile menu, Scroll reveal
+   NELVA ADALIT PORTFOLIO - LOGIC & INTERACTION (WITH SUPABASE DB & AUTH)
+   Contains: Supabase CRUD, Supabase Auth, Lightbox, Mobile menu, Scroll reveal
    ========================================================================== */
 
 // --- Seed Data (Default Projects) ---
@@ -68,18 +68,28 @@ const DEFAULT_PROJECTS = [
 ];
 
 // --- Global App State ---
+let supabaseClient = null;
 let isAdminMode = false;
 let currentFilter = 'all';
 let inMemoryProjects = [...DEFAULT_PROJECTS];
 
-// --- Safe Initialization Wrapper (Defensive against load errors) ---
-const init = () => {
+// --- Initialization Wrapper ---
+const init = async () => {
+  // 1. Initialize Supabase
+  initSupabase();
+
+  // 2. Check Authentication Session
+  await checkAuthSession();
+
+  // 3. Render Projects Grid (Async Supabase fetch)
+  await renderProjects();
+
+  // 4. Setup Components & Events
   const steps = [
-    { name: "Database Init", fn: initDatabase },
-    { name: "Render Projects", fn: renderProjects },
     { name: "Project Filters", fn: initProjectFilters },
     { name: "Mobile Menu", fn: initMobileMenu },
-    { name: "Admin Mode", fn: initAdminMode },
+    { name: "Admin Mode Toggles", fn: initAdminModeToggle },
+    { name: "Auth Forms", fn: initAuthForm },
     { name: "Project Form CRUD", fn: initProjectForm },
     { name: "Certificate Lightbox", fn: initCertificateLightbox },
     { name: "Scroll Effects", fn: initScrollEffects },
@@ -95,17 +105,17 @@ const init = () => {
     }
   });
 
-  // Safe Lucide icon call
+  // Render icons
   try {
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
     }
   } catch (e) {
-    console.error("Lucide failure", e);
+    console.error("Lucide load error", e);
   }
 };
 
-// Check readyState for module compatibility
+// Check readyState for modules
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
@@ -113,76 +123,174 @@ if (document.readyState === 'loading') {
 }
 
 // ==========================================================================
-// 1. DATABASE & STORAGE MANAGEMENT (With Memory Fallback)
+// 1. SUPABASE CLIENT & AUTHENTICATION SESSIONS
 // ==========================================================================
 
 /**
- * Initializes localStorage with default seed data if it does not exist
+ * Creates the Supabase client using environment variables
  */
-function initDatabase() {
+function initSupabase() {
   try {
-    if (!localStorage.getItem('nelva_projects')) {
-      localStorage.setItem('nelva_projects', JSON.stringify(DEFAULT_PROJECTS));
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseAnonKey && typeof supabase !== 'undefined') {
+      supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+    } else {
+      console.warn("Supabase credentials missing in .env or SDK not loaded. Running in local fallback.");
     }
   } catch (e) {
-    console.warn("localStorage is blocked or disabled. Running in-memory database fallback.", e);
+    console.error("Error initializing Supabase client", e);
   }
 }
 
 /**
- * Retrieves projects array from localStorage or in-memory backup
- * @returns {Array} Array of projects
+ * Checks for a valid logged in session on start
  */
-function getProjects() {
+async function checkAuthSession() {
+  if (!supabaseClient) return;
   try {
-    const data = localStorage.getItem('nelva_projects');
-    if (!data) return DEFAULT_PROJECTS;
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+
+    if (session) {
+      isAdminMode = true;
+      updateAdminUI(true);
+    }
+  } catch (e) {
+    console.warn("Could not check active admin session", e);
+  }
+}
+
+/**
+ * Updates navbar styling and editor modes based on login state
+ * @param {boolean} loggedIn 
+ */
+function updateAdminUI(loggedIn) {
+  const toggleBtn = document.getElementById('admin-toggle');
+  const toggleText = document.getElementById('admin-toggle-text');
+  const grid = document.getElementById('projects-grid');
+
+  if (!toggleBtn) return;
+
+  if (loggedIn) {
+    toggleBtn.classList.add('active');
+    if (toggleText) toggleText.textContent = 'Salir Editor';
+    const icon = toggleBtn.querySelector('i');
+    if (icon) icon.setAttribute('data-lucide', 'lock-open');
+    if (grid) grid.classList.add('admin-mode-active');
+  } else {
+    toggleBtn.classList.remove('active');
+    if (toggleText) toggleText.textContent = 'Modo Editor';
+    const icon = toggleBtn.querySelector('i');
+    if (icon) icon.setAttribute('data-lucide', 'lock');
+    if (grid) grid.classList.remove('admin-mode-active');
+  }
+
+  if (typeof lucide !== 'undefined') {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+}
+
+// ==========================================================================
+// 2. PROJECT READ DATABASE OPERATIONS (Supabase / Local fallback)
+// ==========================================================================
+
+/**
+ * Retrieves projects from Supabase database, or falls back to localStorage/memory
+ * @returns {Array} List of projects
+ */
+async function getProjects() {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('proyectos')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        return data;
+      }
+      
+      // If table is empty, we return default projects as template
+      return DEFAULT_PROJECTS;
+    } catch (e) {
+      console.warn("Supabase fetch failed. Falling back to local storage.", e);
+    }
+  }
+
+  // Local storage fallback
+  try {
+    const localData = localStorage.getItem('nelva_projects');
+    if (localData) {
+      const parsed = JSON.parse(localData);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.error("Local storage read failure", err);
+  }
+
+  return inMemoryProjects;
+}
+
+/**
+ * Seeds default projects into Supabase if the table is empty
+ */
+async function seedSupabaseProjects() {
+  if (!supabaseClient) return;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return; // Only signed in admin can write
+
+    const { error } = await supabaseClient
+      .from('proyectos')
+      .insert(DEFAULT_PROJECTS);
     
-    const parsed = JSON.parse(data);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
-    }
-    return DEFAULT_PROJECTS;
+    if (error) throw error;
+    console.log("Successfully seeded projects to Supabase.");
   } catch (e) {
-    console.warn("Could not read from localStorage, using memory storage.", e);
-    return inMemoryProjects;
+    console.error("Error seeding projects to Supabase", e);
   }
 }
 
 /**
- * Saves projects array to localStorage or memory db
- * @param {Array} projects 
+ * Saves projects locally in case of fallback mode
  */
-function saveProjects(projects) {
+function saveLocalProjects(projects) {
   try {
     localStorage.setItem('nelva_projects', JSON.stringify(projects));
   } catch (e) {
-    console.warn("Could not write to localStorage, saving to in-memory store.", e);
     inMemoryProjects = projects;
   }
 }
 
 // ==========================================================================
-// 2. PROJECT RENDERING & INTEGRATION (Defensive variables)
+// 3. PROJECT RENDERING
 // ==========================================================================
 
 /**
  * Renders the project cards grid based on current filter and admin state
  */
-function renderProjects() {
+async function renderProjects() {
   const grid = document.getElementById('projects-grid');
   if (!grid) return;
 
-  // Clear grid contents
-  grid.innerHTML = '';
+  grid.innerHTML = '<div class="section-padding text-center" style="grid-column: 1/-1;"><i data-lucide="loader-2" class="animate-spin text-accent" style="width:32px;height:32px;"></i><p style="margin-top:12px;color:var(--text-secondary);">Cargando proyectos...</p></div>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 
   let projects = [];
   try {
-    projects = getProjects();
+    projects = await getProjects();
   } catch (e) {
-    console.error("Error reading projects list, falling back to seeds", e);
+    console.error("Critical error reading projects list", e);
     projects = DEFAULT_PROJECTS;
   }
+
+  grid.innerHTML = '';
 
   const filteredProjects = projects.filter(proj => {
     if (!proj) return false;
@@ -204,8 +312,6 @@ function renderProjects() {
       </div>
     `;
     grid.appendChild(addCard);
-    
-    // Add Click listener to open creation modal
     addCard.addEventListener('click', () => openProjectModal());
   }
 
@@ -226,7 +332,7 @@ function renderProjects() {
       const categoryLabel = getCategoryName(proj.category);
 
       card.innerHTML = `
-        <!-- Admin Controls Overlay -->
+        <!-- Admin Controls Overlay (Visible only when grid has .admin-mode-active) -->
         <div class="project-admin-actions">
           <button class="proj-admin-btn proj-btn-edit" data-id="${proj.id}" title="Editar Proyecto">
             <i data-lucide="pencil"></i>
@@ -279,9 +385,7 @@ function renderProjects() {
   if (typeof lucide !== 'undefined') {
     try {
       lucide.createIcons();
-    } catch (e) {
-      console.error("Lucide update failed", e);
-    }
+    } catch (e) {}
   }
 
   // Attach event handlers to card edit and delete buttons
@@ -312,11 +416,6 @@ function attachCardAdminListeners() {
   });
 }
 
-/**
- * Maps category codes to user-friendly Spanish labels
- * @param {string} cat Category code
- * @returns {string} User-friendly label
- */
 function getCategoryName(cat) {
   switch (cat) {
     case 'web': return 'Desarrollo Web';
@@ -326,11 +425,6 @@ function getCategoryName(cat) {
   }
 }
 
-/**
- * Maps technology names to matching Lucide icon identifier strings
- * @param {string} tech Technology tag string
- * @returns {string} Lucide icon name
- */
 function getTechIcon(tech) {
   if (!tech) return 'code';
   const t = tech.toLowerCase();
@@ -346,72 +440,138 @@ function getTechIcon(tech) {
 }
 
 // ==========================================================================
-// 3. CRUD LOGIC (CREATE, READ, UPDATE, DELETE)
+// 4. ADMIN USER AUTHENTICATION & LOGIN FORM
 // ==========================================================================
 
 /**
- * Sets up the Admin toggle button interactions in the Navbar
+ * Sets up the Admin toggle button triggers in the Navbar
  */
-function initAdminMode() {
+function initAdminModeToggle() {
   const toggleBtn = document.getElementById('admin-toggle');
-  const grid = document.getElementById('projects-grid');
-  const toggleText = document.getElementById('admin-toggle-text');
+  const loginModal = document.getElementById('login-modal');
 
-  if (!toggleBtn || !grid) return;
+  if (!toggleBtn) return;
 
-  toggleBtn.addEventListener('click', () => {
-    isAdminMode = !isAdminMode;
-    
-    // Toggle active state styling classes
-    toggleBtn.classList.toggle('active');
-    grid.classList.toggle('admin-mode-active');
-    
-    // Update button visual contents (icons and labels)
-    if (isAdminMode) {
-      if (toggleText) toggleText.textContent = 'Salir Editor';
-      const icon = toggleBtn.querySelector('i');
-      if (icon) icon.setAttribute('data-lucide', 'lock-open');
-    } else {
-      if (toggleText) toggleText.textContent = 'Modo Editor';
-      const icon = toggleBtn.querySelector('i');
-      if (icon) icon.setAttribute('data-lucide', 'lock');
+  toggleBtn.addEventListener('click', async () => {
+    if (!supabaseClient) {
+      // Local development toggle without Supabase
+      isAdminMode = !isAdminMode;
+      updateAdminUI(isAdminMode);
+      await renderProjects();
+      return;
     }
-    
-    if (typeof lucide !== 'undefined') {
-      try {
-        lucide.createIcons();
-      } catch (e) {
-        console.error(e);
+
+    if (isAdminMode) {
+      // Prompt for Logout
+      if (confirm('¿Deseas cerrar sesión de Administrador?')) {
+        try {
+          const { error } = await supabaseClient.auth.signOut();
+          if (error) throw error;
+          
+          isAdminMode = false;
+          updateAdminUI(false);
+          await renderProjects();
+        } catch (e) {
+          alert('Error al cerrar sesión: ' + e.message);
+        }
+      }
+    } else {
+      // Open Login Modal
+      if (loginModal) {
+        loginModal.style.display = 'flex';
+        // Focus email field
+        const emailInput = document.getElementById('login-email');
+        if (emailInput) emailInput.focus();
       }
     }
-
-    // Re-render project grid to show/hide edit buttons and add card
-    renderProjects();
   });
+
+  // Modal close triggers
+  const closeBtn = document.getElementById('close-login-modal');
+  if (closeBtn && loginModal) {
+    closeBtn.onclick = () => { loginModal.style.display = 'none'; };
+    loginModal.onclick = (e) => {
+      if (e.target === loginModal) loginModal.style.display = 'none';
+    };
+  }
 }
 
 /**
- * Handles tab category changes
+ * Handles the login form submission via Supabase Auth
  */
-function initProjectFilters() {
-  const filterButtons = document.querySelectorAll('.filter-btn');
+function initAuthForm() {
+  const form = document.getElementById('login-form');
+  const feedback = document.getElementById('login-feedback');
+  const loginModal = document.getElementById('login-modal');
+  const submitBtn = document.getElementById('btn-login-submit');
 
-  filterButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+  if (!form || !loginModal) return;
 
-      currentFilter = btn.getAttribute('data-filter') || 'all';
-      renderProjects();
-    });
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (feedback) {
+      feedback.style.display = 'none';
+      feedback.className = 'form-feedback';
+    }
+
+    if (!supabaseClient) {
+      if (feedback) {
+        feedback.textContent = "Supabase no está configurado. Revisa tus claves locales en el archivo .env";
+        feedback.classList.add('error');
+        feedback.style.display = 'block';
+      }
+      return;
+    }
+
+    // Show loading state
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Ingresando...</span> <i data-lucide="loader-2" class="animate-spin"></i>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      isAdminMode = true;
+      updateAdminUI(true);
+      loginModal.style.display = 'none';
+      form.reset();
+
+      // Seed database with mock data if it is empty after login
+      const { data: dbData } = await supabaseClient.from('proyectos').select('id').limit(1);
+      if (dbData && dbData.length === 0) {
+        await seedSupabaseProjects();
+      }
+
+      await renderProjects();
+    } catch (err) {
+      if (feedback) {
+        feedback.textContent = `Error: ${err.message || 'Credenciales incorrectas'}`;
+        feedback.classList.add('error');
+        feedback.style.display = 'block';
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
   });
 }
+
+// ==========================================================================
+// 5. CRUD WRITE OPERATIONS (Supabase / Local Fallback)
+// ==========================================================================
 
 /**
  * Opens the Project form modal for creation or editing
  * @param {string} [id] Optional project ID to edit
  */
-function openProjectModal(id = null) {
+async function openProjectModal(id = null) {
   const modal = document.getElementById('project-modal');
   const form = document.getElementById('project-form');
   const modalTitle = document.getElementById('modal-title');
@@ -419,15 +579,18 @@ function openProjectModal(id = null) {
 
   if (!modal || !form || !modalTitle) return;
 
-  // Reset form inputs
   form.reset();
   const idInput = document.getElementById('project-id');
   if (idInput) idInput.value = '';
 
   if (id) {
-    // Edit mode
     modalTitle.textContent = 'Editar Proyecto';
-    const projects = getProjects();
+    let projects = [];
+    try {
+      projects = await getProjects();
+    } catch (e) {
+      projects = DEFAULT_PROJECTS;
+    }
     const proj = projects.find(p => p.id === id);
     
     if (proj) {
@@ -449,14 +612,12 @@ function openProjectModal(id = null) {
       if (demo) demo.value = proj.demoLink || '';
     }
   } else {
-    // Create mode
     modalTitle.textContent = 'Agregar Proyecto';
   }
 
   // Show Modal
   modal.style.display = 'flex';
 
-  // Close triggers
   const closeModal = () => {
     modal.style.display = 'none';
   };
@@ -466,7 +627,6 @@ function openProjectModal(id = null) {
     if (e.target === modal) closeModal();
   };
 
-  // Close on ESC press
   const handleEsc = (e) => {
     if (e.key === 'Escape') {
       closeModal();
@@ -477,15 +637,16 @@ function openProjectModal(id = null) {
 }
 
 /**
- * Configures the Project creation / modification submit handlers
+ * Handles the creation or modification submission (CRUD)
  */
 function initProjectForm() {
   const form = document.getElementById('project-form');
   const modal = document.getElementById('project-modal');
+  const submitBtn = document.getElementById('btn-save-project');
 
-  if (!form || !modal) return;
+  if (!form || !modal || !submitBtn) return;
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const id = document.getElementById('project-id').value;
@@ -497,57 +658,127 @@ function initProjectForm() {
     const codeLink = document.getElementById('proj-code').value.trim();
     const demoLink = document.getElementById('proj-demo').value.trim();
 
-    let projects = getProjects();
+    // Show loading submit state
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Guardando...</span> <i data-lucide="loader-2" class="animate-spin"></i>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    if (id) {
-      // Update existing project
-      projects = projects.map(p => {
-        if (p.id === id) {
-          return { id, title, category, image, description, techs, codeLink, demoLink };
+    let success = false;
+
+    if (supabaseClient) {
+      // Connect to remote Supabase Database
+      try {
+        if (id) {
+          // Update row
+          const { error } = await supabaseClient
+            .from('proyectos')
+            .update({ title, category, image, description, techs, codeLink, demoLink })
+            .eq('id', id);
+          if (error) throw error;
+        } else {
+          // Insert row
+          const newProj = {
+            id: 'user-proj-' + Date.now(),
+            title,
+            category,
+            image,
+            description,
+            techs,
+            codeLink,
+            demoLink
+          };
+          const { error } = await supabaseClient
+            .from('proyectos')
+            .insert([newProj]);
+          if (error) throw error;
         }
-        return p;
-      });
+        success = true;
+      } catch (err) {
+        alert('Error al guardar en base de datos: ' + err.message);
+      }
     } else {
-      // Create new project
-      const newProj = {
-        id: 'user-proj-' + Date.now(),
-        title,
-        category,
-        image,
-        description,
-        techs,
-        codeLink,
-        demoLink
-      };
-      projects.push(newProj);
+      // Local fallback mode
+      try {
+        let projects = await getProjects();
+        if (id) {
+          projects = projects.map(p => {
+            if (p.id === id) {
+              return { id, title, category, image, description, techs, codeLink, demoLink };
+            }
+            return p;
+          });
+        } else {
+          const newProj = {
+            id: 'user-proj-' + Date.now(),
+            title,
+            category,
+            image,
+            description,
+            techs,
+            codeLink,
+            demoLink
+          };
+          projects.push(newProj);
+        }
+        saveLocalProjects(projects);
+        success = true;
+      } catch (err) {
+        console.error("Local save error", err);
+      }
     }
 
-    saveProjects(projects);
-    modal.style.display = 'none';
-    renderProjects();
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    if (success) {
+      modal.style.display = 'none';
+      await renderProjects();
+    }
   });
 }
 
 /**
- * Deletes a project from database
+ * Deletes a project from the DB
  * @param {string} id Project ID
  */
-function deleteProject(id) {
-  if (confirm('¿Estás seguro de que deseas eliminar este proyecto de tu portafolio?')) {
-    let projects = getProjects();
-    projects = projects.filter(p => p.id !== id);
-    saveProjects(projects);
-    renderProjects();
+async function deleteProject(id) {
+  if (confirm('¿Estás seguro de que deseas eliminar este proyecto del portafolio?')) {
+    let success = false;
+    
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from('proyectos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        success = true;
+      } catch (err) {
+        alert('Error al borrar de Supabase: ' + err.message);
+      }
+    } else {
+      try {
+        let projects = await getProjects();
+        projects = projects.filter(p => p.id !== id);
+        saveLocalProjects(projects);
+        success = true;
+      } catch (err) {
+        console.error("Local delete error", err);
+      }
+    }
+
+    if (success) {
+      await renderProjects();
+    }
   }
 }
 
 // ==========================================================================
-// 4. CERTIFICATE LIGHTBOX (VISOR ESTILO PRENDA)
+// 6. CERTIFICATE LIGHTBOX (VISOR ESTILO PRENDA)
 // ==========================================================================
 
-/**
- * Configures the certificate cards visual zoom/lightbox popups
- */
 function initCertificateLightbox() {
   const certCards = document.querySelectorAll('.interactive-cert');
   const lightbox = document.getElementById('cert-lightbox');
@@ -563,10 +794,8 @@ function initCertificateLightbox() {
   const lightboxId = document.getElementById('lightbox-id');
   const lightboxVerifyBtn = document.getElementById('lightbox-verify-btn');
 
-  // Attach click listener to each certificate card
   certCards.forEach(card => {
     card.addEventListener('click', () => {
-      // Retrieve metadata attributes
       const image = card.getAttribute('data-image') || '';
       const tag = card.getAttribute('data-tag') || 'Credencial';
       
@@ -578,7 +807,6 @@ function initCertificateLightbox() {
       const certId = card.getAttribute('data-id') || '';
       const verifyUrl = card.getAttribute('data-verify') || '';
 
-      // Populate Lightbox fields
       if (lightboxImg) lightboxImg.src = image;
       if (lightboxTag) lightboxTag.textContent = tag;
       if (lightboxTitle) lightboxTitle.textContent = title;
@@ -589,12 +817,10 @@ function initCertificateLightbox() {
         lightboxVerifyBtn.href = verifyUrl;
       }
 
-      // Show Lightbox Modal
       lightbox.style.display = 'flex';
     });
   });
 
-  // Close actions
   const closeLightbox = () => {
     lightbox.style.display = 'none';
   };
@@ -607,7 +833,6 @@ function initCertificateLightbox() {
     }
   };
 
-  // Close on ESC
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && lightbox.style.display === 'flex') {
       closeLightbox();
@@ -616,12 +841,23 @@ function initCertificateLightbox() {
 }
 
 // ==========================================================================
-// 5. BASE SITE FEATURES (MOBILE NAV, SCROLL EFFECTS, FORM MOCKS)
+// 7. BASE SITE FEATURES (MOBILE NAV, SCROLL EFFECTS, FORM MOCKS)
 // ==========================================================================
 
-/**
- * Sets up mobile hamburger navigation menu toggles
- */
+function initProjectFilters() {
+  const filterButtons = document.querySelectorAll('.filter-btn');
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentFilter = btn.getAttribute('data-filter') || 'all';
+      await renderProjects();
+    });
+  });
+}
+
 function initMobileMenu() {
   const mobileToggle = document.getElementById('mobile-toggle');
   const navMenu = document.getElementById('nav-menu');
@@ -653,9 +889,6 @@ function initMobileMenu() {
   });
 }
 
-/**
- * Handles active header state on scroll and highlights current nav section link
- */
 function initScrollEffects() {
   const header = document.querySelector('.header');
   const sections = document.querySelectorAll('section');
@@ -705,9 +938,6 @@ function initScrollEffects() {
   }
 }
 
-/**
- * Scroll reveal animations (adds class .revealed when elements enter the screen)
- */
 function initScrollReveal() {
   const revealElements = document.querySelectorAll('.scroll-reveal');
 
@@ -731,16 +961,12 @@ function initScrollReveal() {
       revealObserver.observe(element);
     });
   } else {
-    // Fallback if observer is unsupported
     revealElements.forEach(element => {
       element.classList.add('revealed');
     });
   }
 }
 
-/**
- * Manages the contact form state and mock submission success
- */
 function initContactForm() {
   const form = document.getElementById('contact-form');
   const feedback = document.getElementById('form-feedback');
