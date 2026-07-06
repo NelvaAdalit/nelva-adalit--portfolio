@@ -178,65 +178,8 @@
           </p>
         </div>
 
-        <div class="certs-grid scroll-reveal">
-          
-          <!-- Cert 1 -->
-          <div class="cert-card interactive-cert" 
-               data-image="/images/award-4.jpg" 
-               data-tag="Frontend"
-               data-issuer="Vercel & Meta Academy"
-               data-desc="Esta credencial valida el dominio avanzado de HTML5, CSS3 responsivo, variables CSS, optimización de velocidad de carga en empaquetadores modernos (Vite/Webpack) y arquitectura de componentes limpios y reutilizables."
-               data-id="ID: VRC-998811"
-               data-verify="https://vercel.com">
-            <div class="cert-icon-wrapper">
-              <i data-lucide="award" class="cert-icon"></i>
-            </div>
-            <h3 class="cert-title">Desarrollador Frontend Certificado</h3>
-            <p class="cert-issuer">Vercel & Meta Academy</p>
-            <div class="cert-footer">
-              <span class="cert-date">ID: VRC-998811</span>
-              <span class="cert-preview-trigger">Inspeccionar <i data-lucide="zoom-in"></i></span>
-            </div>
-          </div>
-
-          <!-- Cert 2 -->
-          <div class="cert-card interactive-cert" 
-               data-image="/images/award-2.jpg" 
-               data-tag="Inteligencia Artificial"
-               data-issuer="DeepLearning.AI"
-               data-desc="Especialización en redes neuronales convolucionales (CNN) y redes recurrentes (RNN). Desarrollo y ajuste de hiperparámetros en TensorFlow para visión artificial y clasificación médica automatizada."
-               data-id="ID: DLAI-77224"
-               data-verify="https://coursera.org">
-            <div class="cert-icon-wrapper">
-              <i data-lucide="brain-circuit" class="cert-icon"></i>
-            </div>
-            <h3 class="cert-title">Deep Learning Specialist</h3>
-            <p class="cert-issuer">DeepLearning.AI</p>
-            <div class="cert-footer">
-              <span class="cert-date">ID: DLAI-77224</span>
-              <span class="cert-preview-trigger">Inspeccionar <i data-lucide="zoom-in"></i></span>
-            </div>
-          </div>
-
-          <!-- Cert 3 -->
-          <div class="cert-card interactive-cert" 
-               data-image="/images/award-3.jpg" 
-               data-tag="Bizagi & UML"
-               data-issuer="Bizagi Corporate"
-               data-desc="Certificación oficial en el diseño, modelado, simulación y automatización de flujos de trabajo corporativos complejos bajo el estándar BPMN 2.0 y diagramación de casos de uso y despliegue estructurados en UML."
-               data-id="ID: BZG-33990"
-               data-verify="https://bizagi.com">
-            <div class="cert-icon-wrapper">
-              <i data-lucide="file-symlink" class="cert-icon"></i>
-            </div>
-            <h3 class="cert-title">BPMN 2.0 Process Modeling</h3>
-            <p class="cert-issuer">Bizagi Corporate</p>
-            <div class="cert-footer">
-              <span class="cert-date">ID: BZG-33990</span>
-              <span class="cert-preview-trigger">Inspeccionar <i data-lucide="zoom-in"></i></span>
-            </div>
-          </div>
-
+        <div class="certs-grid scroll-reveal" id="certs-grid">
+          <!-- Cargado dinámicamente con JS -->
         </div>
       </div>
     </section>
@@ -455,15 +398,13 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="proj-image">URL de Imagen de Muestra</label>
-            <select id="proj-image" name="image" required>
-              <option value="/images/project-web-1.jpg">Diseño Web - Dashboard Azul</option>
-              <option value="/images/project-web-2.jpg">API / Backend - Conexiones Violeta</option>
-              <option value="/images/project-ai-1.jpg">Inteligencia Artificial - Red Neuronal Cyan</option>
-              <option value="/images/project-ai-2.jpg">Asistente Virtual - Chatbot Morado</option>
-              <option value="/images/project-proc-1.jpg">BPMN - Proceso Bizagi</option>
-              <option value="/images/project-proc-2.jpg">UML - Arquitectura de Sistemas</option>
-            </select>
+            <label for="proj-image-file">Imagen del Proyecto (Cargar archivo)</label>
+            <input type="file" id="proj-image-file" accept="image/*">
+            <input type="hidden" id="proj-image" name="image">
+            <div id="proj-image-preview-container" style="display:none; margin-top:8px;">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Vista previa:</span>
+              <img id="proj-image-preview" src="" style="max-height:80px; display:block; border-radius:var(--radius-sm); margin-top:4px;">
+            </div>
           </div>
         </div>
         <div class="form-group">
@@ -485,6 +426,57 @@
           </div>
         </div>
         <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-save-project">Guardar Proyecto</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal CRUD Certificaciones -->
+  <div class="modal-overlay" id="cert-modal" style="display: none;">
+    <div class="modal-content glassmorphic-modal">
+      <div class="modal-header">
+        <h3 id="cert-modal-title">Agregar Certificación</h3>
+        <button class="modal-close-btn" id="close-cert-modal" aria-label="Cerrar modal">&times;</button>
+      </div>
+      <form id="cert-form">
+        <input type="hidden" id="cert-id" name="id">
+        <div class="form-group">
+          <label for="cert-title-input">Nombre de la Certificación</label>
+          <input type="text" id="cert-title-input" name="title" placeholder="Ej. Desarrollador Frontend Certificado" required>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="cert-issuer-input">Emisor / Institución</label>
+            <input type="text" id="cert-issuer-input" name="issuer" placeholder="Ej. Vercel & Meta Academy" required>
+          </div>
+          <div class="form-group">
+            <label for="cert-category-input">Categoría / Especialidad</label>
+            <input type="text" id="cert-category-input" name="category" placeholder="Ej. Frontend" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cert-desc-input">Descripción / Competencias Validadas</label>
+          <textarea id="cert-desc-input" name="description" rows="3" placeholder="Detalla las habilidades aprendidas..." required></textarea>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="cert-credential-input">ID de la Credencial</label>
+            <input type="text" id="cert-credential-input" name="credentialId" placeholder="Ej. ID: VRC-998811">
+          </div>
+          <div class="form-group">
+            <label for="cert-verify-input">Enlace de Verificación Oficial</label>
+            <input type="url" id="cert-verify-input" name="verifyLink" placeholder="Ej. https://credenciales.com/verificar">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="cert-image-file">Imagen del Certificado / Diploma (Cargar archivo)</label>
+          <input type="file" id="cert-image-file" accept="image/*">
+          <input type="hidden" id="cert-image" name="image">
+          <div id="cert-image-preview-container" style="display:none; margin-top:8px;">
+            <span style="font-size:0.75rem; color:var(--text-muted);">Vista previa:</span>
+            <img id="cert-image-preview" src="" style="max-height:80px; display:block; border-radius:var(--radius-sm); margin-top:4px;">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-save-cert">Guardar Certificación</button>
       </form>
     </div>
   </div>

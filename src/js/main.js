@@ -1,6 +1,6 @@
 /* ==========================================================================
-   NELVA ADALIT PORTFOLIO - LOGIC & INTERACTION (WITH SUPABASE DB & AUTH)
-   Contains: Supabase CRUD, Supabase Auth, Lightbox, Mobile menu, Scroll reveal
+   NELVA ADALIT PORTFOLIO - LOGIC & INTERACTION (WITH SUPABASE DB & STORAGE)
+   Contains: Supabase DB & Storage CRUD, Admin Auth, Lightbox, Mobile menu
    ========================================================================== */
 
 // --- Seed Data (Default Projects) ---
@@ -67,11 +67,46 @@ const DEFAULT_PROJECTS = [
   }
 ];
 
+// --- Seed Data (Default Certifications) ---
+const DEFAULT_CERTIFICATIONS = [
+  {
+    id: "seed-cert-1",
+    title: "Desarrollador Frontend Certificado",
+    issuer: "Vercel & Meta Academy",
+    category: "Frontend",
+    description: "Esta credencial valida el dominio avanzado de HTML5, CSS3 responsivo, variables CSS, optimización de velocidad de carga en empaquetadores modernos (Vite/Webpack) y arquitectura de componentes limpios y reutilizables.",
+    credentialId: "ID: VRC-998811",
+    verifyLink: "https://vercel.com",
+    image: "/images/award-4.jpg"
+  },
+  {
+    id: "seed-cert-2",
+    title: "Deep Learning Specialist",
+    issuer: "DeepLearning.AI",
+    category: "Inteligencia Artificial",
+    description: "Especialización en redes neuronales convolucionales (CNN) y redes recurrentes (RNN). Desarrollo y ajuste de hiperparámetros en TensorFlow para visión artificial y clasificación médica automatizada.",
+    credentialId: "ID: DLAI-77224",
+    verifyLink: "https://coursera.org",
+    image: "/images/award-2.jpg"
+  },
+  {
+    id: "seed-cert-3",
+    title: "BPMN 2.0 Process Modeling",
+    issuer: "Bizagi Corporate",
+    category: "Bizagi & UML",
+    description: "Certificación oficial en el diseño, modelado, simulación y automatización de flujos de trabajo corporativos complejos bajo el estándar BPMN 2.0 y diagramación de casos de uso y despliegue estructurados en UML.",
+    credentialId: "ID: BZG-33990",
+    verifyLink: "https://bizagi.com",
+    image: "/images/award-3.jpg"
+  }
+];
+
 // --- Global App State ---
 let supabaseClient = null;
 let isAdminMode = false;
 let currentFilter = 'all';
 let inMemoryProjects = [...DEFAULT_PROJECTS];
+let inMemoryCerts = [...DEFAULT_CERTIFICATIONS];
 
 // --- Initialization Wrapper ---
 const init = async () => {
@@ -81,8 +116,9 @@ const init = async () => {
   // 2. Check Authentication Session
   await checkAuthSession();
 
-  // 3. Render Projects Grid (Async Supabase fetch)
+  // 3. Render Dashboard grids
   await renderProjects();
+  await renderCertifications();
 
   // 4. Setup Components & Events
   const steps = [
@@ -91,7 +127,8 @@ const init = async () => {
     { name: "Admin Mode Toggles", fn: initAdminModeToggle },
     { name: "Auth Forms", fn: initAuthForm },
     { name: "Project Form CRUD", fn: initProjectForm },
-    { name: "Certificate Lightbox", fn: initCertificateLightbox },
+    { name: "Certificate Form CRUD", fn: initCertificateForm },
+    { name: "File Upload Previews", fn: initFileUploadPreviews },
     { name: "Scroll Effects", fn: initScrollEffects },
     { name: "Scroll Reveal", fn: initScrollReveal },
     { name: "Contact Form", fn: initContactForm }
@@ -126,9 +163,6 @@ if (document.readyState === 'loading') {
 // 1. SUPABASE CLIENT & AUTHENTICATION SESSIONS
 // ==========================================================================
 
-/**
- * Creates the Supabase client using environment variables
- */
 function initSupabase() {
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -144,9 +178,6 @@ function initSupabase() {
   }
 }
 
-/**
- * Checks for a valid logged in session on start
- */
 async function checkAuthSession() {
   if (!supabaseClient) return;
   try {
@@ -162,14 +193,11 @@ async function checkAuthSession() {
   }
 }
 
-/**
- * Updates navbar styling and editor modes based on login state
- * @param {boolean} loggedIn 
- */
 function updateAdminUI(loggedIn) {
   const toggleBtn = document.getElementById('admin-toggle');
   const toggleText = document.getElementById('admin-toggle-text');
-  const grid = document.getElementById('projects-grid');
+  const projGrid = document.getElementById('projects-grid');
+  const certGrid = document.getElementById('certs-grid');
 
   if (!toggleBtn) return;
 
@@ -178,13 +206,15 @@ function updateAdminUI(loggedIn) {
     if (toggleText) toggleText.textContent = 'Salir Editor';
     const icon = toggleBtn.querySelector('i');
     if (icon) icon.setAttribute('data-lucide', 'lock-open');
-    if (grid) grid.classList.add('admin-mode-active');
+    if (projGrid) projGrid.classList.add('admin-mode-active');
+    if (certGrid) certGrid.classList.add('admin-mode-active');
   } else {
     toggleBtn.classList.remove('active');
     if (toggleText) toggleText.textContent = 'Modo Editor';
     const icon = toggleBtn.querySelector('i');
     if (icon) icon.setAttribute('data-lucide', 'lock');
-    if (grid) grid.classList.remove('admin-mode-active');
+    if (projGrid) projGrid.classList.remove('admin-mode-active');
+    if (certGrid) certGrid.classList.remove('admin-mode-active');
   }
 
   if (typeof lucide !== 'undefined') {
@@ -193,13 +223,88 @@ function updateAdminUI(loggedIn) {
 }
 
 // ==========================================================================
-// 2. PROJECT READ DATABASE OPERATIONS (Supabase / Local fallback)
+// 2. SUPABASE FILE STORAGE (UPLOADS BUCKET)
 // ==========================================================================
 
 /**
- * Retrieves projects from Supabase database, or falls back to localStorage/memory
- * @returns {Array} List of projects
+ * Uploads a file to Supabase Storage bucket 'portfolio'
+ * @param {File} file 
+ * @param {string} folderFolder Name of subfolder (e.g. 'projects', 'certs')
+ * @returns {string} Public Url of the uploaded image
  */
+async function uploadFileToStorage(file, folder = 'projects') {
+  if (!supabaseClient) {
+    // If Supabase is not connected, fallback to local Blob URL for preview
+    return URL.createObjectURL(file);
+  }
+
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+    const filePath = `${folder}/${fileName}`;
+
+    // Upload to 'portfolio' bucket
+    const { data, error } = await supabaseClient.storage
+      .from('portfolio')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    // Get public Url
+    const { data: { publicUrl } } = supabaseClient.storage
+      .from('portfolio')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (err) {
+    console.error("Storage upload error details", err);
+    throw new Error("No se pudo subir la imagen a Supabase Storage: " + err.message);
+  }
+}
+
+/**
+ * Setups live preview images for file uploads in the modals
+ */
+function initFileUploadPreviews() {
+  const setupPreview = (fileInputId, imgId, containerId, hiddenInputId) => {
+    const fileInput = document.getElementById(fileInputId);
+    const previewImg = document.getElementById(imgId);
+    const container = document.getElementById(containerId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+
+    if (!fileInput || !previewImg || !container) return;
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          previewImg.src = event.target.result;
+          container.style.display = 'block';
+          if (hiddenInput) {
+            // Put a temporary indicator so form validation knows a file is pending
+            hiddenInput.value = "PENDING_FILE_UPLOAD";
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        container.style.display = 'none';
+        if (hiddenInput) hiddenInput.value = '';
+      }
+    });
+  };
+
+  setupPreview('proj-image-file', 'proj-image-preview', 'proj-image-preview-container', 'proj-image');
+  setupPreview('cert-image-file', 'cert-image-preview', 'cert-image-preview-container', 'cert-image');
+}
+
+// ==========================================================================
+// 3. PROJECT DATABASE READS & RENDERING
+// ==========================================================================
+
 async function getProjects() {
   if (supabaseClient) {
     try {
@@ -213,68 +318,23 @@ async function getProjects() {
       if (data && data.length > 0) {
         return data;
       }
-      
-      // If table is empty, we return default projects as template
       return DEFAULT_PROJECTS;
     } catch (e) {
-      console.warn("Supabase fetch failed. Falling back to local storage.", e);
+      console.warn("Supabase projects fetch failed. Falling back to local data.", e);
     }
   }
 
-  // Local storage fallback
   try {
     const localData = localStorage.getItem('nelva_projects');
     if (localData) {
       const parsed = JSON.parse(localData);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
-  } catch (err) {
-    console.error("Local storage read failure", err);
-  }
+  } catch (err) {}
 
   return inMemoryProjects;
 }
 
-/**
- * Seeds default projects into Supabase if the table is empty
- */
-async function seedSupabaseProjects() {
-  if (!supabaseClient) return;
-  try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) return; // Only signed in admin can write
-
-    const { error } = await supabaseClient
-      .from('proyectos')
-      .insert(DEFAULT_PROJECTS);
-    
-    if (error) throw error;
-    console.log("Successfully seeded projects to Supabase.");
-  } catch (e) {
-    console.error("Error seeding projects to Supabase", e);
-  }
-}
-
-/**
- * Saves projects locally in case of fallback mode
- */
-function saveLocalProjects(projects) {
-  try {
-    localStorage.setItem('nelva_projects', JSON.stringify(projects));
-  } catch (e) {
-    inMemoryProjects = projects;
-  }
-}
-
-// ==========================================================================
-// 3. PROJECT RENDERING
-// ==========================================================================
-
-/**
- * Renders the project cards grid based on current filter and admin state
- */
 async function renderProjects() {
   const grid = document.getElementById('projects-grid');
   if (!grid) return;
@@ -286,7 +346,6 @@ async function renderProjects() {
   try {
     projects = await getProjects();
   } catch (e) {
-    console.error("Critical error reading projects list", e);
     projects = DEFAULT_PROJECTS;
   }
 
@@ -298,7 +357,6 @@ async function renderProjects() {
     return currentFilter === 'all' || cat === currentFilter;
   });
 
-  // If Admin Mode is active, render the dashed 'Add Project' card first
   if (isAdminMode) {
     const addCard = document.createElement('article');
     addCard.className = 'add-project-card';
@@ -315,7 +373,6 @@ async function renderProjects() {
     addCard.addEventListener('click', () => openProjectModal());
   }
 
-  // Render project card elements
   filteredProjects.forEach(proj => {
     try {
       const card = document.createElement('article');
@@ -332,8 +389,7 @@ async function renderProjects() {
       const categoryLabel = getCategoryName(proj.category);
 
       card.innerHTML = `
-        <!-- Admin Controls Overlay (Visible only when grid has .admin-mode-active) -->
-        <div class="project-admin-actions">
+        <div class="project-admin-actions" style="${isAdminMode ? 'opacity:1; pointer-events:auto; transform:translateY(0);' : ''}">
           <button class="proj-admin-btn proj-btn-edit" data-id="${proj.id}" title="Editar Proyecto">
             <i data-lucide="pencil"></i>
           </button>
@@ -374,27 +430,19 @@ async function renderProjects() {
           </div>
         </div>
       `;
-      
       grid.appendChild(card);
     } catch (err) {
-      console.error("Error creating project card structure", proj, err);
+      console.error(err);
     }
   });
 
-  // Reinitialize Lucide Icons for dynamic content
   if (typeof lucide !== 'undefined') {
-    try {
-      lucide.createIcons();
-    } catch (e) {}
+    try { lucide.createIcons(); } catch (e) {}
   }
 
-  // Attach event handlers to card edit and delete buttons
   attachCardAdminListeners();
 }
 
-/**
- * Attaches event listeners for edit/delete actions inside project cards
- */
 function attachCardAdminListeners() {
   const editButtons = document.querySelectorAll('.proj-btn-edit');
   const deleteButtons = document.querySelectorAll('.proj-btn-delete');
@@ -402,18 +450,158 @@ function attachCardAdminListeners() {
   editButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const id = btn.getAttribute('data-id');
-      openProjectModal(id);
+      openProjectModal(btn.getAttribute('data-id'));
     });
   });
 
   deleteButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const id = btn.getAttribute('data-id');
-      deleteProject(id);
+      deleteProject(btn.getAttribute('data-id'));
     });
   });
+}
+
+// ==========================================================================
+// 4. CERTIFICATION DATABASE READS & RENDERING
+// ==========================================================================
+
+async function getCertifications() {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('certificaciones')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        return data;
+      }
+      return DEFAULT_CERTIFICATIONS;
+    } catch (e) {
+      console.warn("Supabase certs fetch failed. Falling back to local data.", e);
+    }
+  }
+
+  try {
+    const localData = localStorage.getItem('nelva_certs');
+    if (localData) {
+      const parsed = JSON.parse(localData);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (err) {}
+
+  return inMemoryCerts;
+}
+
+async function renderCertifications() {
+  const grid = document.getElementById('certs-grid');
+  if (!grid) return;
+
+  grid.innerHTML = '<div class="section-padding text-center" style="grid-column: 1/-1;"><i data-lucide="loader-2" class="animate-spin text-accent" style="width:32px;height:32px;"></i><p style="margin-top:12px;color:var(--text-secondary);">Cargando certificaciones...</p></div>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  let certs = [];
+  try {
+    certs = await getCertifications();
+  } catch (e) {
+    certs = DEFAULT_CERTIFICATIONS;
+  }
+
+  grid.innerHTML = '';
+
+  if (isAdminMode) {
+    const addCard = document.createElement('div');
+    addCard.className = 'cert-card add-project-card';
+    addCard.id = 'add-cert-btn';
+    addCard.style.display = 'flex';
+    addCard.style.minHeight = '200px';
+    addCard.style.cursor = 'pointer';
+    addCard.innerHTML = `
+      <div class="add-project-content" style="margin: auto;">
+        <div class="add-icon-box">
+          <i data-lucide="plus"></i>
+        </div>
+        <span class="add-project-text">Agregar Certificado</span>
+      </div>
+    `;
+    grid.appendChild(addCard);
+    addCard.addEventListener('click', () => openCertModal());
+  }
+
+  certs.forEach(cert => {
+    try {
+      const card = document.createElement('div');
+      card.className = 'cert-card interactive-cert';
+      card.setAttribute('data-image', cert.image || '/images/award-4.jpg');
+      card.setAttribute('data-tag', cert.category || 'Credencial');
+      card.setAttribute('data-issuer', cert.issuer || '');
+      card.setAttribute('data-desc', cert.description || '');
+      card.setAttribute('data-id', cert.credentialId || '');
+      card.setAttribute('data-verify', cert.verifyLink || '');
+
+      card.innerHTML = `
+        <div class="project-admin-actions" style="${isAdminMode ? 'opacity: 1; pointer-events: auto; transform: translateY(0);' : ''}">
+          <button class="proj-admin-btn cert-btn-edit" data-id="${cert.id}" title="Editar Certificado">
+            <i data-lucide="pencil"></i>
+          </button>
+          <button class="proj-admin-btn cert-btn-delete" data-id="${cert.id}" title="Eliminar Certificado">
+            <i data-lucide="trash-2"></i>
+          </button>
+        </div>
+
+        <div class="cert-icon-wrapper">
+          <i data-lucide="${getCertIcon(cert.category)}" class="cert-icon"></i>
+        </div>
+        <h3 class="cert-title">${cert.title || 'Certificado'}</h3>
+        <p class="cert-issuer">${cert.issuer || ''}</p>
+        <div class="cert-footer">
+          <span class="cert-date">${cert.credentialId || ''}</span>
+          <span class="cert-preview-trigger">Inspeccionar <i data-lucide="zoom-in"></i></span>
+        </div>
+      `;
+      grid.appendChild(card);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  if (typeof lucide !== 'undefined') {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+
+  attachCertAdminListeners();
+  initCertificateLightbox();
+}
+
+function attachCertAdminListeners() {
+  const editButtons = document.querySelectorAll('.cert-btn-edit');
+  const deleteButtons = document.querySelectorAll('.cert-btn-delete');
+
+  editButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openCertModal(btn.getAttribute('data-id'));
+    });
+  });
+
+  deleteButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteCert(btn.getAttribute('data-id'));
+    });
+  });
+}
+
+function getCertIcon(category) {
+  if (!category) return 'award';
+  const c = category.toLowerCase();
+  if (c.includes('front') || c.includes('web') || c.includes('react')) return 'award';
+  if (c.includes('inteligencia') || c.includes('ia') || c.includes('ai') || c.includes('learning')) return 'brain-circuit';
+  if (c.includes('bizagi') || c.includes('bpmn') || c.includes('process') || c.includes('uml')) return 'file-symlink';
+  return 'award';
 }
 
 function getCategoryName(cat) {
@@ -440,12 +628,34 @@ function getTechIcon(tech) {
 }
 
 // ==========================================================================
-// 4. ADMIN USER AUTHENTICATION & LOGIN FORM
+// 5. SEEDING REMOTE DATA
 // ==========================================================================
 
-/**
- * Sets up the Admin toggle button triggers in the Navbar
- */
+async function seedSupabaseDataIfEmpty() {
+  if (!supabaseClient) return;
+  try {
+    // 1. Projects seed check
+    const { data: projData } = await supabaseClient.from('proyectos').select('id').limit(1);
+    if (projData && projData.length === 0) {
+      await supabaseClient.from('proyectos').insert(DEFAULT_PROJECTS);
+      console.log("Seeded default projects to Supabase.");
+    }
+
+    // 2. Certifications seed check
+    const { data: certData } = await supabaseClient.from('certificaciones').select('id').limit(1);
+    if (certData && certData.length === 0) {
+      await supabaseClient.from('certificaciones').insert(DEFAULT_CERTIFICATIONS);
+      console.log("Seeded default certifications to Supabase.");
+    }
+  } catch (e) {
+    console.error("Error auto-seeding tables", e);
+  }
+}
+
+// ==========================================================================
+// 6. ADMIN AUTHENTICATION
+// ==========================================================================
+
 function initAdminModeToggle() {
   const toggleBtn = document.getElementById('admin-toggle');
   const loginModal = document.getElementById('login-modal');
@@ -454,15 +664,14 @@ function initAdminModeToggle() {
 
   toggleBtn.addEventListener('click', async () => {
     if (!supabaseClient) {
-      // Local development toggle without Supabase
       isAdminMode = !isAdminMode;
       updateAdminUI(isAdminMode);
       await renderProjects();
+      await renderCertifications();
       return;
     }
 
     if (isAdminMode) {
-      // Prompt for Logout
       if (confirm('¿Deseas cerrar sesión de Administrador?')) {
         try {
           const { error } = await supabaseClient.auth.signOut();
@@ -471,22 +680,20 @@ function initAdminModeToggle() {
           isAdminMode = false;
           updateAdminUI(false);
           await renderProjects();
+          await renderCertifications();
         } catch (e) {
           alert('Error al cerrar sesión: ' + e.message);
         }
       }
     } else {
-      // Open Login Modal
       if (loginModal) {
         loginModal.style.display = 'flex';
-        // Focus email field
         const emailInput = document.getElementById('login-email');
         if (emailInput) emailInput.focus();
       }
     }
   });
 
-  // Modal close triggers
   const closeBtn = document.getElementById('close-login-modal');
   if (closeBtn && loginModal) {
     closeBtn.onclick = () => { loginModal.style.display = 'none'; };
@@ -496,9 +703,6 @@ function initAdminModeToggle() {
   }
 }
 
-/**
- * Handles the login form submission via Supabase Auth
- */
 function initAuthForm() {
   const form = document.getElementById('login-form');
   const feedback = document.getElementById('login-feedback');
@@ -520,14 +724,13 @@ function initAuthForm() {
 
     if (!supabaseClient) {
       if (feedback) {
-        feedback.textContent = "Supabase no está configurado. Revisa tus claves locales en el archivo .env";
+        feedback.textContent = "Supabase no está conectado localmente. Revisa el archivo .env";
         feedback.classList.add('error');
         feedback.style.display = 'block';
       }
       return;
     }
 
-    // Show loading state
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = `<span>Ingresando...</span> <i data-lucide="loader-2" class="animate-spin"></i>`;
@@ -542,13 +745,11 @@ function initAuthForm() {
       loginModal.style.display = 'none';
       form.reset();
 
-      // Seed database with mock data if it is empty after login
-      const { data: dbData } = await supabaseClient.from('proyectos').select('id').limit(1);
-      if (dbData && dbData.length === 0) {
-        await seedSupabaseProjects();
-      }
+      // Seed tables if empty on first login
+      await seedSupabaseDataIfEmpty();
 
       await renderProjects();
+      await renderCertifications();
     } catch (err) {
       if (feedback) {
         feedback.textContent = `Error: ${err.message || 'Credenciales incorrectas'}`;
@@ -564,33 +765,27 @@ function initAuthForm() {
 }
 
 // ==========================================================================
-// 5. CRUD WRITE OPERATIONS (Supabase / Local Fallback)
+// 7. PROJECTS CRUD WRITE OPERATIONS
 // ==========================================================================
 
-/**
- * Opens the Project form modal for creation or editing
- * @param {string} [id] Optional project ID to edit
- */
 async function openProjectModal(id = null) {
   const modal = document.getElementById('project-modal');
   const form = document.getElementById('project-form');
   const modalTitle = document.getElementById('modal-title');
   const closeBtn = document.getElementById('close-project-modal');
+  const previewContainer = document.getElementById('proj-image-preview-container');
 
   if (!modal || !form || !modalTitle) return;
 
   form.reset();
+  if (previewContainer) previewContainer.style.display = 'none';
+  
   const idInput = document.getElementById('project-id');
   if (idInput) idInput.value = '';
 
   if (id) {
     modalTitle.textContent = 'Editar Proyecto';
-    let projects = [];
-    try {
-      projects = await getProjects();
-    } catch (e) {
-      projects = DEFAULT_PROJECTS;
-    }
+    let projects = await getProjects();
     const proj = projects.find(p => p.id === id);
     
     if (proj) {
@@ -610,35 +805,26 @@ async function openProjectModal(id = null) {
       if (techs) techs.value = proj.techs || '';
       if (code) code.value = proj.codeLink || '';
       if (demo) demo.value = proj.demoLink || '';
+
+      // Set image preview if exists
+      if (proj.image && previewContainer) {
+        const previewImg = document.getElementById('proj-image-preview');
+        if (previewImg) {
+          previewImg.src = proj.image;
+          previewContainer.style.display = 'block';
+        }
+      }
     }
   } else {
     modalTitle.textContent = 'Agregar Proyecto';
   }
 
-  // Show Modal
   modal.style.display = 'flex';
-
-  const closeModal = () => {
-    modal.style.display = 'none';
-  };
-
+  const closeModal = () => { modal.style.display = 'none'; };
   if (closeBtn) closeBtn.onclick = closeModal;
-  modal.onclick = (e) => {
-    if (e.target === modal) closeModal();
-  };
-
-  const handleEsc = (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
-      document.removeEventListener('keydown', handleEsc);
-    }
-  };
-  document.addEventListener('keydown', handleEsc);
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
 }
 
-/**
- * Handles the creation or modification submission (CRUD)
- */
 function initProjectForm() {
   const form = document.getElementById('project-form');
   const modal = document.getElementById('project-modal');
@@ -652,37 +838,45 @@ function initProjectForm() {
     const id = document.getElementById('project-id').value;
     const title = document.getElementById('proj-title').value.trim();
     const category = document.getElementById('proj-category').value;
-    const image = document.getElementById('proj-image').value;
     const description = document.getElementById('proj-desc').value.trim();
     const techs = document.getElementById('proj-techs').value.trim();
     const codeLink = document.getElementById('proj-code').value.trim();
     const demoLink = document.getElementById('proj-demo').value.trim();
+    
+    // File upload elements
+    const fileInput = document.getElementById('proj-image-file');
+    let imageUrl = document.getElementById('proj-image').value;
 
-    // Show loading submit state
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
     submitBtn.innerHTML = `<span>Guardando...</span> <i data-lucide="loader-2" class="animate-spin"></i>`;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    let success = false;
+    try {
+      // 1. Upload file if selected
+      if (fileInput && fileInput.files[0]) {
+        imageUrl = await uploadFileToStorage(fileInput.files[0], 'projects');
+      }
 
-    if (supabaseClient) {
-      // Connect to remote Supabase Database
-      try {
+      if (!imageUrl || imageUrl === 'PENDING_FILE_UPLOAD') {
+        throw new Error("Por favor, selecciona una imagen para el proyecto.");
+      }
+
+      let success = false;
+
+      if (supabaseClient) {
         if (id) {
-          // Update row
           const { error } = await supabaseClient
             .from('proyectos')
-            .update({ title, category, image, description, techs, codeLink, demoLink })
+            .update({ title, category, image: imageUrl, description, techs, codeLink, demoLink })
             .eq('id', id);
           if (error) throw error;
         } else {
-          // Insert row
           const newProj = {
             id: 'user-proj-' + Date.now(),
             title,
             category,
-            image,
+            image: imageUrl,
             description,
             techs,
             codeLink,
@@ -694,17 +888,13 @@ function initProjectForm() {
           if (error) throw error;
         }
         success = true;
-      } catch (err) {
-        alert('Error al guardar en base de datos: ' + err.message);
-      }
-    } else {
-      // Local fallback mode
-      try {
+      } else {
+        // Local storage CRUD fallback
         let projects = await getProjects();
         if (id) {
           projects = projects.map(p => {
             if (p.id === id) {
-              return { id, title, category, image, description, techs, codeLink, demoLink };
+              return { id, title, category, image: imageUrl, description, techs, codeLink, demoLink };
             }
             return p;
           });
@@ -713,7 +903,7 @@ function initProjectForm() {
             id: 'user-proj-' + Date.now(),
             title,
             category,
-            image,
+            image: imageUrl,
             description,
             techs,
             codeLink,
@@ -723,26 +913,22 @@ function initProjectForm() {
         }
         saveLocalProjects(projects);
         success = true;
-      } catch (err) {
-        console.error("Local save error", err);
       }
-    }
 
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = originalText;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-
-    if (success) {
-      modal.style.display = 'none';
-      await renderProjects();
+      if (success) {
+        modal.style.display = 'none';
+        await renderProjects();
+      }
+    } catch (err) {
+      alert(err.message || 'Error al guardar el proyecto');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
   });
 }
 
-/**
- * Deletes a project from the DB
- * @param {string} id Project ID
- */
 async function deleteProject(id) {
   if (confirm('¿Estás seguro de que deseas eliminar este proyecto del portafolio?')) {
     let success = false;
@@ -756,7 +942,7 @@ async function deleteProject(id) {
         if (error) throw error;
         success = true;
       } catch (err) {
-        alert('Error al borrar de Supabase: ' + err.message);
+        alert('Error al borrar: ' + err.message);
       }
     } else {
       try {
@@ -776,7 +962,208 @@ async function deleteProject(id) {
 }
 
 // ==========================================================================
-// 6. CERTIFICATE LIGHTBOX (VISOR ESTILO PRENDA)
+// 8. CERTIFICATES CRUD WRITE OPERATIONS
+// ==========================================================================
+
+async function openCertModal(id = null) {
+  const modal = document.getElementById('cert-modal');
+  const form = document.getElementById('cert-form');
+  const modalTitle = document.getElementById('cert-modal-title');
+  const closeBtn = document.getElementById('close-cert-modal');
+  const previewContainer = document.getElementById('cert-image-preview-container');
+
+  if (!modal || !form || !modalTitle) return;
+
+  form.reset();
+  if (previewContainer) previewContainer.style.display = 'none';
+
+  const idInput = document.getElementById('cert-id');
+  if (idInput) idInput.value = '';
+
+  if (id) {
+    modalTitle.textContent = 'Editar Certificación';
+    let certs = await getCertifications();
+    const cert = certs.find(c => c.id === id);
+
+    if (cert) {
+      if (idInput) idInput.value = cert.id || '';
+      const t = document.getElementById('cert-title-input');
+      const issuer = document.getElementById('cert-issuer-input');
+      const cat = document.getElementById('cert-category-input');
+      const desc = document.getElementById('cert-desc-input');
+      const credId = document.getElementById('cert-credential-input');
+      const verify = document.getElementById('cert-verify-input');
+      const img = document.getElementById('cert-image');
+
+      if (t) t.value = cert.title || '';
+      if (issuer) issuer.value = cert.issuer || '';
+      if (cat) cat.value = cert.category || '';
+      if (desc) desc.value = cert.description || '';
+      if (credId) credId.value = cert.credentialId || '';
+      if (verify) verify.value = cert.verifyLink || '';
+      if (img) img.value = cert.image || '';
+
+      if (cert.image && previewContainer) {
+        const previewImg = document.getElementById('cert-image-preview');
+        if (previewImg) {
+          previewImg.src = cert.image;
+          previewContainer.style.display = 'block';
+        }
+      }
+    }
+  } else {
+    modalTitle.textContent = 'Agregar Certificación';
+  }
+
+  modal.style.display = 'flex';
+  const closeModal = () => { modal.style.display = 'none'; };
+  if (closeBtn) closeBtn.onclick = closeModal;
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+}
+
+function initCertificateForm() {
+  const form = document.getElementById('cert-form');
+  const modal = document.getElementById('cert-modal');
+  const submitBtn = document.getElementById('btn-save-cert');
+
+  if (!form || !modal || !submitBtn) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById('cert-id').value;
+    const title = document.getElementById('cert-title-input').value.trim();
+    const issuer = document.getElementById('cert-issuer-input').value.trim();
+    const category = document.getElementById('cert-category-input').value.trim();
+    const description = document.getElementById('cert-desc-input').value.trim();
+    const credentialId = document.getElementById('cert-credential-input').value.trim();
+    const verifyLink = document.getElementById('cert-verify-input').value.trim();
+
+    const fileInput = document.getElementById('cert-image-file');
+    let imageUrl = document.getElementById('cert-image').value;
+
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Guardando...</span> <i data-lucide="loader-2" class="animate-spin"></i>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    try {
+      if (fileInput && fileInput.files[0]) {
+        imageUrl = await uploadFileToStorage(fileInput.files[0], 'certs');
+      }
+
+      if (!imageUrl || imageUrl === 'PENDING_FILE_UPLOAD') {
+        throw new Error("Por favor, selecciona una imagen para el certificado.");
+      }
+
+      let success = false;
+
+      if (supabaseClient) {
+        if (id) {
+          const { error } = await supabaseClient
+            .from('certificaciones')
+            .update({ title, issuer, category, description, credentialId, verifyLink, image: imageUrl })
+            .eq('id', id);
+          if (error) throw error;
+        } else {
+          const newCert = {
+            id: 'user-cert-' + Date.now(),
+            title,
+            issuer,
+            category,
+            description,
+            credentialId,
+            verifyLink,
+            image: imageUrl
+          };
+          const { error } = await supabaseClient
+            .from('certificaciones')
+            .insert([newCert]);
+          if (error) throw error;
+        }
+        success = true;
+      } else {
+        let certs = await getCertifications();
+        if (id) {
+          certs = certs.map(c => {
+            if (c.id === id) {
+              return { id, title, issuer, category, description, credentialId, verifyLink, image: imageUrl };
+            }
+            return c;
+          });
+        } else {
+          const newCert = {
+            id: 'user-cert-' + Date.now(),
+            title,
+            issuer,
+            category,
+            description,
+            credentialId,
+            verifyLink,
+            image: imageUrl
+          };
+          certs.push(newCert);
+        }
+        saveLocalCerts(certs);
+        success = true;
+      }
+
+      if (success) {
+        modal.style.display = 'none';
+        await renderCertifications();
+      }
+    } catch (err) {
+      alert(err.message || 'Error al guardar la certificación');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+  });
+}
+
+function saveLocalCerts(certs) {
+  try {
+    localStorage.setItem('nelva_certs', JSON.stringify(certs));
+  } catch (e) {
+    inMemoryCerts = certs;
+  }
+}
+
+async function deleteCert(id) {
+  if (confirm('¿Estás seguro de que deseas eliminar este certificado?')) {
+    let success = false;
+
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from('certificaciones')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        success = true;
+      } catch (err) {
+        alert('Error al borrar de Supabase: ' + err.message);
+      }
+    } else {
+      try {
+        let certs = await getCertifications();
+        certs = certs.filter(c => c.id !== id);
+        saveLocalCerts(certs);
+        success = true;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    if (success) {
+      await renderCertifications();
+    }
+  }
+}
+
+// ==========================================================================
+// 9. CERTIFICATE LIGHTBOX (VISOR ESTILO PRENDA)
 // ==========================================================================
 
 function initCertificateLightbox() {
@@ -814,7 +1201,12 @@ function initCertificateLightbox() {
       if (lightboxDesc) lightboxDesc.textContent = desc;
       if (lightboxId) lightboxId.textContent = certId;
       if (lightboxVerifyBtn) {
-        lightboxVerifyBtn.href = verifyUrl;
+        if (verifyUrl && verifyUrl !== '#') {
+          lightboxVerifyBtn.href = verifyUrl;
+          lightboxVerifyBtn.style.display = 'inline-flex';
+        } else {
+          lightboxVerifyBtn.style.display = 'none';
+        }
       }
 
       lightbox.style.display = 'flex';
@@ -841,7 +1233,7 @@ function initCertificateLightbox() {
 }
 
 // ==========================================================================
-// 7. BASE SITE FEATURES (MOBILE NAV, SCROLL EFFECTS, FORM MOCKS)
+// 10. BASE SITE FEATURES (MOBILE NAV, SCROLL EFFECTS, FORM MOCKS)
 // ==========================================================================
 
 function initProjectFilters() {
