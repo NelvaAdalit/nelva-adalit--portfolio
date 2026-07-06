@@ -101,6 +101,36 @@ const DEFAULT_CERTIFICATIONS = [
   }
 ];
 
+function normalizeProjectRecord(project) {
+  if (!project) return project;
+
+  return {
+    id: project.id,
+    title: project.title ?? '',
+    category: project.category ?? 'web',
+    image: project.image ?? '',
+    description: project.description ?? '',
+    techs: project.techs ?? '',
+    codeLink: project.codeLink ?? project.codelink ?? '',
+    demoLink: project.demoLink ?? project.demolink ?? ''
+  };
+}
+
+function normalizeCertificationRecord(certification) {
+  if (!certification) return certification;
+
+  return {
+    id: certification.id,
+    title: certification.title ?? '',
+    issuer: certification.issuer ?? '',
+    category: certification.category ?? '',
+    description: certification.description ?? '',
+    credentialId: certification.credentialId ?? certification.credentialid ?? '',
+    verifyLink: certification.verifyLink ?? certification.verifylink ?? '',
+    image: certification.image ?? ''
+  };
+}
+
 // --- Global App State ---
 let supabaseClient = null;
 let isAdminMode = false;
@@ -322,7 +352,7 @@ async function getProjects() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        return data;
+        return data.map(normalizeProjectRecord);
       }
       return DEFAULT_PROJECTS;
     } catch (e) {
@@ -334,11 +364,11 @@ async function getProjects() {
     const localData = localStorage.getItem('nelva_projects');
     if (localData) {
       const parsed = JSON.parse(localData);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(normalizeProjectRecord);
     }
   } catch (err) {}
 
-  return inMemoryProjects;
+  return inMemoryProjects.map(normalizeProjectRecord);
 }
 
 async function renderProjects() {
@@ -483,7 +513,7 @@ async function getCertifications() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        return data;
+        return data.map(normalizeCertificationRecord);
       }
       return DEFAULT_CERTIFICATIONS;
     } catch (e) {
@@ -495,11 +525,11 @@ async function getCertifications() {
     const localData = localStorage.getItem('nelva_certs');
     if (localData) {
       const parsed = JSON.parse(localData);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(normalizeCertificationRecord);
     }
   } catch (err) {}
 
-  return inMemoryCerts;
+  return inMemoryCerts.map(normalizeCertificationRecord);
 }
 
 async function renderCertifications() {
@@ -642,13 +672,31 @@ async function seedSupabaseDataIfEmpty() {
   try {
     const { data: projData } = await supabaseClient.from('proyectos').select('id').limit(1);
     if (projData && projData.length === 0) {
-      await supabaseClient.from('proyectos').insert(DEFAULT_PROJECTS);
+      await supabaseClient.from('proyectos').insert(DEFAULT_PROJECTS.map(project => ({
+        id: project.id,
+        title: project.title,
+        category: project.category,
+        image: project.image,
+        description: project.description,
+        techs: project.techs,
+        codelink: project.codeLink,
+        demolink: project.demoLink
+      })));
       console.log("Seeded default projects to Supabase.");
     }
 
     const { data: certData } = await supabaseClient.from('certificaciones').select('id').limit(1);
     if (certData && certData.length === 0) {
-      await supabaseClient.from('certificaciones').insert(DEFAULT_CERTIFICATIONS);
+      await supabaseClient.from('certificaciones').insert(DEFAULT_CERTIFICATIONS.map(certification => ({
+        id: certification.id,
+        title: certification.title,
+        issuer: certification.issuer,
+        category: certification.category,
+        description: certification.description,
+        credentialid: certification.credentialId,
+        verifylink: certification.verifyLink,
+        image: certification.image
+      })));
       console.log("Seeded default certifications to Supabase.");
     }
   } catch (e) {
@@ -664,9 +712,8 @@ function initAdminModeToggle() {
   const toggleBtn = document.getElementById('admin-toggle');
   const loginModal = document.getElementById('login-modal');
 
-  if (!toggleBtn) return;
-
-  toggleBtn.addEventListener('click', async () => {
+  // Registrar el manejador de forma global para el onclick inline de respaldo
+  window.handleAdminToggleClick = async () => {
     if (!supabaseClient) {
       isAdminMode = !isAdminMode;
       updateAdminUI(isAdminMode);
@@ -696,7 +743,13 @@ function initAdminModeToggle() {
         if (emailInput) emailInput.focus();
       }
     }
-  });
+  };
+
+  if (!toggleBtn) return;
+
+  // Si el script cargó con éxito, limpiamos el onclick inline de respaldo para evitar ejecuciones dobles
+  toggleBtn.removeAttribute('onclick');
+  toggleBtn.addEventListener('click', window.handleAdminToggleClick);
 
   const closeBtn = document.getElementById('close-login-modal');
   if (closeBtn && loginModal) {
@@ -868,7 +921,7 @@ function initProjectForm() {
         if (id) {
           const { error } = await supabaseClient
             .from('proyectos')
-            .update({ title, category, image: imageUrl, description, techs, codeLink, demoLink })
+            .update({ title, category, image: imageUrl, description, techs, codelink: codeLink, demolink: demoLink })
             .eq('id', id);
           if (error) throw error;
         } else {
@@ -879,8 +932,8 @@ function initProjectForm() {
             image: imageUrl,
             description,
             techs,
-            codeLink,
-            demoLink
+            codelink: codeLink,
+            demolink: demoLink
           };
           const { error } = await supabaseClient
             .from('proyectos')
@@ -1069,7 +1122,7 @@ function initCertificateForm() {
         if (id) {
           const { error } = await supabaseClient
             .from('certificaciones')
-            .update({ title, issuer, category, description, credentialId, verifyLink, image: imageUrl })
+            .update({ title, issuer, category, description, credentialid: credentialId, verifylink: verifyLink, image: imageUrl })
             .eq('id', id);
           if (error) throw error;
         } else {
@@ -1079,8 +1132,8 @@ function initCertificateForm() {
             issuer,
             category,
             description,
-            credentialId,
-            verifyLink,
+            credentialid: credentialId,
+            verifylink: verifyLink,
             image: imageUrl
           };
           const { error } = await supabaseClient
