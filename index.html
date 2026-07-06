@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Portafolio profesional de Nelva Adalit. Desarrolladora Frontend, experta en Inteligencia Artificial y Modelado de Procesos (Bizagi/UML). Diseños modernos, eficientes y responsivos.">
+  <meta name="keywords" content="Nelva Adalit, Portafolio, Frontend, Desarrollo Web, Inteligencia Artificial, Bizagi, UML, BPMN, Vercel, Supabase, Node.js">
+  <meta name="author" content="Nelva Adalit">
+  <title>Nelva Adalit | Portafolio Profesional</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/src/styles/main.css">
+  
+  <!-- Favicon (Fallback to modern SVG emoji) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- Background Decorative Glows -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <!-- Header & Fixed Navbar -->
+  <header class="header">
+    <div class="container navbar-container">
+      <a href="#inicio" class="logo" id="nav-logo">
+        <span class="logo-accent">Nelva</span>Adalit
+      </a>
+      
+      <!-- Desktop Navigation Links -->
+      <nav class="nav-menu" id="nav-menu">
+        <ul class="nav-list">
+          <li><a href="#inicio" class="nav-link active" id="link-inicio">Inicio</a></li>
+          <li><a href="#proyectos" class="nav-link" id="link-proyectos">Proyectos</a></li>
+          <li><a href="#practicas" class="nav-link" id="link-practicas">Prácticas</a></li>
+          <li><a href="#certificaciones" class="nav-link" id="link-certificaciones">Certificaciones</a></li>
+          <li><a href="#sobre-mi" class="nav-link" id="link-sobre-mi">Sobre Mí</a></li>
+          <li><a href="#contacto" class="nav-link" id="link-contacto">Contacto</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <!-- Admin Toggle Switch -->
+        <button class="btn btn-sm btn-outline btn-admin-toggle" id="admin-toggle">
+          <i data-lucide="lock"></i> <span id="admin-toggle-text">Modo Editor</span>
+        </button>
+        
+        <a href="#contacto" class="btn btn-sm btn-primary nav-cta">Hablemos</a>
+        
+        <!-- Mobile Menu Toggle Button -->
+        <button class="mobile-toggle" id="mobile-toggle" aria-label="Abrir menú de navegación" aria-expanded="false">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Section: Hero (Inicio) -->
+    <section id="inicio" class="hero-section">
+      <div class="container hero-container">
+        <div class="hero-content scroll-reveal">
+          <div class="badge-accent">Disponible para nuevos proyectos</div>
+          <h1 class="hero-title">
+            Creando soluciones digitales con <span class="gradient-text">Precisión y Disciplina</span>
+          </h1>
+          <p class="hero-subtitle">
+            Ingeniera de software especializada en Desarrollo Frontend, Inteligencia Artificial y el modelado y optimización de procesos (Bizagi/UML). Con formación militar que forja el liderazgo y la resiliencia en cada entrega.
+          </p>
+          <div class="hero-actions">
+            <a href="#proyectos" class="btn btn-primary">Ver Proyectos</a>
+            <a href="#contacto" class="btn btn-secondary">Contactar</a>
+          </div>
+          
+          <div class="hero-stats">
+            <div class="stat-item">
+              <span class="stat-number">100%</span>
+              <span class="stat-label">Compromiso</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">C1</span>
+              <span class="stat-label">Nivel de Inglés</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">3+</span>
+              <span class="stat-label">Áreas de Especialidad</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Proyectos -->
+    <section id="proyectos" class="projects-section section-padding">
+      <div class="container">
+        <div class="section-header scroll-reveal">
+          <span class="section-tag">Portafolio</span>
+          <h2 class="section-title">Proyectos Destacados</h2>
+          <p class="section-description">
+            Explora mis trabajos clasificados según su área de desarrollo. Modifica, agrega o elimina proyectos activando el Modo Editor.
+          </p>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-container scroll-reveal">
+          <button class="filter-btn active" data-filter="all" id="btn-filter-all">Todos</button>
+          <button class="filter-btn" data-filter="web" id="btn-filter-web">Desarrollo Web</button>
+          <button class="filter-btn" data-filter="ai" id="btn-filter-ai">Inteligencia Artificial</button>
+          <button class="filter-btn" data-filter="process" id="btn-filter-process">Modelado de Procesos (Bizagi/UML)</button>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="projects-grid" id="projects-grid">
+          <!-- Cargado dinámicamente con JS, incluyendo el card CRUD para agregar nuevo proyecto -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Prácticas -->
+    <section id="practicas" class="timeline-section section-padding alternate-bg">
+      <div class="container">
+        <div class="section-header scroll-reveal">
+          <span class="section-tag">Trayectoria</span>
+          <h2 class="section-title">Prácticas y Experiencia</h2>
+          <p class="section-description">
+            Mi experiencia práctica aplicando teoría técnica a entornos y flujos reales de producción.
+          </p>
+        </div>
+
+        <div class="timeline scroll-reveal">
+          
+          <!-- Timeline Item 1 -->
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">Ene 2026 - Presente</div>
+            <div class="timeline-content">
+              <h3>Práctica en Ingeniería de Software & IA</h3>
+              <span class="timeline-organization">Tech Solutions Inc.</span>
+              <p>
+                Desarrollo de interfaces responsivas y consumo de APIs de aprendizaje profundo. Integración de modelos predictivos en dashboards interactivos basados en Vite y frameworks modernos.
+              </p>
+            </div>
+          </div>
+
+          <!-- Timeline Item 2 -->
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">Ago 2025 - Dic 2025</div>
+            <div class="timeline-content">
+              <h3>Analista de Procesos y Modelador BPMN</h3>
+              <span class="timeline-organization">Consultores de Operación Alfa</span>
+              <p>
+                Diseño y diagramación de flujos corporativos utilizando Bizagi BPM Suite y estándares UML. Colaboración directa en la reducción de cuellos de botella operativos en un 18%.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Certificaciones -->
+    <section id="certificaciones" class="certs-section section-padding">
+      <div class="container">
+        <div class="section-header scroll-reveal">
+          <span class="section-tag">Credenciales</span>
+          <h2 class="section-title">Certificaciones Internacionales</h2>
+          <p class="section-description">
+            Haz clic en cualquier tarjeta de certificación para inspeccionar la credencial a detalle a pantalla completa (estilo visor de prendas).
+          </p>
+        </div>
+
+        <div class="certs-grid scroll-reveal">
+          
+          <!-- Cert 1 -->
+          <div class="cert-card interactive-cert" 
+               data-image="/images/award-4.jpg" 
+               data-tag="Frontend"
+               data-issuer="Vercel & Meta Academy"
+               data-desc="Esta credencial valida el dominio avanzado de HTML5, CSS3 responsivo, variables CSS, optimización de velocidad de carga en empaquetadores modernos (Vite/Webpack) y arquitectura de componentes limpios y reutilizables."
+               data-id="ID: VRC-998811"
+               data-verify="https://vercel.com">
+            <div class="cert-icon-wrapper">
+              <i data-lucide="award" class="cert-icon"></i>
+            </div>
+            <h3 class="cert-title">Desarrollador Frontend Certificado</h3>
+            <p class="cert-issuer">Vercel & Meta Academy</p>
+            <div class="cert-footer">
+              <span class="cert-date">ID: VRC-998811</span>
+              <span class="cert-preview-trigger">Inspeccionar <i data-lucide="zoom-in"></i></span>
+            </div>
+          </div>
+
+          <!-- Cert 2 -->
+          <div class="cert-card interactive-cert" 
+               data-image="/images/award-2.jpg" 
+               data-tag="Inteligencia Artificial"
+               data-issuer="DeepLearning.AI"
+               data-desc="Especialización en redes neuronales convolucionales (CNN) y redes recurrentes (RNN). Desarrollo y ajuste de hiperparámetros en TensorFlow para visión artificial y clasificación médica automatizada."
+               data-id="ID: DLAI-77224"
+               data-verify="https://coursera.org">
+            <div class="cert-icon-wrapper">
+              <i data-lucide="brain-circuit" class="cert-icon"></i>
+            </div>
+            <h3 class="cert-title">Deep Learning Specialist</h3>
+            <p class="cert-issuer">DeepLearning.AI</p>
+            <div class="cert-footer">
+              <span class="cert-date">ID: DLAI-77224</span>
+              <span class="cert-preview-trigger">Inspeccionar <i data-lucide="zoom-in"></i></span>
+            </div>
+          </div>
+
+          <!-- Cert 3 -->
+          <div class="cert-card interactive-cert" 
+               data-image="/images/award-3.jpg" 
+               data-tag="Bizagi & UML"
+               data-issuer="Bizagi Corporate"
+               data-desc="Certificación oficial en el diseño, modelado, simulación y automatización de flujos de trabajo corporativos complejos bajo el estándar BPMN 2.0 y diagramación de casos de uso y despliegue estructurados en UML."
+               data-id="ID: BZG-33990"
+               data-verify="https://bizagi.com">
+            <div class="cert-icon-wrapper">
+              <i data-lucide="file-symlink" class="cert-icon"></i>
+            </div>
+            <h3 class="cert-title">BPMN 2.0 Process Modeling</h3>
+            <p class="cert-issuer">Bizagi Corporate</p>
+            <div class="cert-footer">
+              <span class="cert-date">ID: BZG-33990</span>
+              <span class="cert-preview-trigger">Inspeccionar <i data-lucide="zoom-in"></i></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Sobre Mí -->
+    <section id="sobre-mi" class="about-section section-padding alternate-bg">
+      <div class="container">
+        <div class="section-header scroll-reveal">
+          <span class="section-tag">Biografía</span>
+          <h2 class="section-title">Sobre Mí</h2>
+        </div>
+
+        <div class="about-grid">
+          <!-- Left Column: Biography -->
+          <div class="about-text scroll-reveal">
+            <h3 class="about-subtitle">Disciplina, Resiliencia y Enfoque Técnico</h3>
+            <p class="about-paragraph">
+              Mi trayectoria profesional está guiada por la firme convicción de que los mejores resultados técnicos nacen de la constancia y la organización rigurosa. A lo largo de mi formación, he consolidado habilidades duras en el desarrollo frontend y el análisis computacional.
+            </p>
+            
+            <div class="highlight-box">
+              <div class="highlight-icon">
+                <i data-lucide="shield-check"></i>
+              </div>
+              <div class="highlight-info">
+                <h4>Servicio Militar de Honor</h4>
+                <p>Mi paso por el servicio militar me enseñó la importancia del trabajo en equipo coordinado, la adaptabilidad bajo alta presión laboral y el cumplimiento estricto de directrices con excelencia.</p>
+              </div>
+            </div>
+
+            <div class="highlight-box">
+              <div class="highlight-icon">
+                <i data-lucide="languages"></i>
+              </div>
+              <div class="highlight-info">
+                <h4>Competencia Global en Inglés</h4>
+                <p>He completado estudios avanzados en el idioma inglés, lo que me capacita para comprender documentación técnica de alto nivel, coordinar con equipos multiculturales y desempeñarme internacionalmente con soltura (Nivel C1/B2).</p>
+              </div>
+            </div>
+
+            <p class="about-paragraph">
+              Busco integrar mis conocimientos estructurados de Bizagi/UML con la velocidad de desarrollo de frameworks modernos de JavaScript y la automatización inteligente por medio de IA.
+            </p>
+          </div>
+
+          <!-- Right Column: Awards Grid Gallery -->
+          <div class="about-gallery scroll-reveal">
+            <h3 class="about-subtitle gallery-title">Reconocimientos y Logros</h3>
+            
+            <div class="gallery-grid">
+              
+              <!-- Award 1 -->
+              <div class="gallery-item">
+                <img src="/images/award-1.jpg" alt="Primer Lugar Hackathon" class="gallery-img">
+                <div class="gallery-overlay">
+                  <div class="gallery-overlay-content">
+                    <span class="award-tag">Primer Lugar</span>
+                    <h4 class="award-title">Hackathon de Innovación</h4>
+                    <p class="award-desc">Solución IA aplicada a la sustentabilidad regional.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Award 2 -->
+              <div class="gallery-item">
+                <img src="/images/award-2.jpg" alt="Excelencia Académica" class="gallery-img">
+                <div class="gallery-overlay">
+                  <div class="gallery-overlay-content">
+                    <span class="award-tag">Académico</span>
+                    <h4 class="award-title">Excelencia Universitaria</h4>
+                    <p class="award-desc">Reconocimiento al promedio sobresaliente.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Award 3 -->
+              <div class="gallery-item">
+                <img src="/images/award-3.jpg" alt="Servicio Militar" class="gallery-img">
+                <div class="gallery-overlay">
+                  <div class="gallery-overlay-content">
+                    <span class="award-tag">Honorífico</span>
+                    <h4 class="award-title">Disciplina Militar</h4>
+                    <p class="award-desc">Mención al valor y cumplimiento ejemplar.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Award 4 -->
+              <div class="gallery-item">
+                <img src="/images/award-4.jpg" alt="Estudios de Inglés" class="gallery-img">
+                <div class="gallery-overlay">
+                  <div class="gallery-overlay-content">
+                    <span class="award-tag">Idiomas</span>
+                    <h4 class="award-title">Certificación C1 Advanced</h4>
+                    <p class="award-desc">Nivel lingüístico superior avalado internacionalmente.</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Contacto -->
+    <section id="contacto" class="contact-section section-padding">
+      <div class="container">
+        <div class="section-header scroll-reveal">
+          <span class="section-tag">Conectemos</span>
+          <h2 class="section-title">Iniciar una Conversación</h2>
+          <p class="section-description">
+            ¿Tienes un proyecto en mente, requieres asesoría en Bizagi/UML o buscas integrar Inteligencia Artificial en tu flujo corporativo? Escríbeme.
+          </p>
+        </div>
+
+        <div class="contact-wrapper scroll-reveal">
+          <!-- Contact Card Info -->
+          <div class="contact-info-card">
+            <h3>Información de Contacto</h3>
+            <p>Siempre respondo en un lapso de 24 horas hábiles.</p>
+            
+            <ul class="contact-info-list">
+              <li>
+                <div class="contact-icon-box">
+                  <i data-lucide="mail"></i>
+                </div>
+                <div>
+                  <span class="contact-label">Correo Electrónico</span>
+                  <a href="mailto:nelva.adalit@ejemplo.com" class="contact-value">nelva.adalit@ejemplo.com</a>
+                </div>
+              </li>
+              <li>
+                <div class="contact-icon-box">
+                  <i data-lucide="linkedin"></i>
+                </div>
+                <div>
+                  <span class="contact-label">LinkedIn</span>
+                  <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="contact-value">linkedin.com/in/nelva-adalit</a>
+                </div>
+              </li>
+              <li>
+                <div class="contact-icon-box">
+                  <i data-lucide="map-pin"></i>
+                </div>
+                <div>
+                  <span class="contact-label">Ubicación</span>
+                  <span class="contact-value">Santiago, Chile (Remoto a nivel global)</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Contact Form -->
+          <form class="contact-form" id="contact-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="contact-name">Nombre Completo</label>
+                <input type="text" id="contact-name" name="name" placeholder="Ej. Juan Pérez" required>
+              </div>
+              <div class="form-group">
+                <label for="contact-email">Correo Electrónico</label>
+                <input type="email" id="contact-email" name="email" placeholder="Ej. juan@correo.com" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="contact-subject">Asunto</label>
+              <input type="text" id="contact-subject" name="subject" placeholder="Ej. Oportunidad de Proyecto / Práctica" required>
+            </div>
+            <div class="form-group">
+              <label for="contact-message">Mensaje</label>
+              <textarea id="contact-message" name="message" rows="5" placeholder="Cuéntame sobre tu proyecto o consulta..." required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-submit" id="btn-submit-contact">
+              <span>Enviar Mensaje</span> <i data-lucide="send"></i>
+            </button>
+            <div id="form-feedback" class="form-feedback" style="display: none;"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-container">
+      <p class="copyright">&copy; 2026 Nelva Adalit. Todos los derechos reservados. Desarrollado con precisión y disciplina.</p>
+      <div class="footer-socials">
+        <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i data-lucide="github"></i></a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i data-lucide="linkedin"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal CRUD Proyectos -->
+  <div class="modal-overlay" id="project-modal" style="display: none;">
+    <div class="modal-content glassmorphic-modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Agregar Proyecto</h3>
+        <button class="modal-close-btn" id="close-project-modal" aria-label="Cerrar modal">&times;</button>
+      </div>
+      <form id="project-form">
+        <input type="hidden" id="project-id" name="id">
+        <div class="form-group">
+          <label for="proj-title">Título del Proyecto</label>
+          <input type="text" id="proj-title" name="title" placeholder="Ej. Portal Académico" required>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="proj-category">Categoría</label>
+            <select id="proj-category" name="category" required>
+              <option value="web">Desarrollo Web</option>
+              <option value="ai">Inteligencia Artificial</option>
+              <option value="process">Modelado de Procesos (Bizagi/UML)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="proj-image">URL de Imagen de Muestra</label>
+            <select id="proj-image" name="image" required>
+              <option value="/images/project-web-1.jpg">Diseño Web - Dashboard Azul</option>
+              <option value="/images/project-web-2.jpg">API / Backend - Conexiones Violeta</option>
+              <option value="/images/project-ai-1.jpg">Inteligencia Artificial - Red Neuronal Cyan</option>
+              <option value="/images/project-ai-2.jpg">Asistente Virtual - Chatbot Morado</option>
+              <option value="/images/project-proc-1.jpg">BPMN - Proceso Bizagi</option>
+              <option value="/images/project-proc-2.jpg">UML - Arquitectura de Sistemas</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="proj-desc">Descripción Corta</label>
+          <textarea id="proj-desc" name="description" rows="3" placeholder="Descripción resumida del proyecto..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="proj-techs">Tecnologías (Separadas por comas)</label>
+          <input type="text" id="proj-techs" name="techs" placeholder="Ej. Node.js, Supabase, Vercel" required>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="proj-code">Enlace de Código / Planos</label>
+            <input type="url" id="proj-code" name="codeLink" placeholder="Ej. https://github.com/usuario/repo" required>
+          </div>
+          <div class="form-group">
+            <label for="proj-demo">Enlace de Demo / Presentación</label>
+            <input type="url" id="proj-demo" name="demoLink" placeholder="Ej. https://mi-proyecto.vercel.app" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-save-project">Guardar Proyecto</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Lightbox Certificados -->
+  <div class="modal-overlay lightbox-overlay" id="cert-lightbox" style="display: none;">
+    <div class="lightbox-container">
+      <button class="lightbox-close" id="close-cert-lightbox" aria-label="Cerrar visor">&times;</button>
+      <div class="lightbox-content">
+        <div class="lightbox-image-wrapper">
+          <img src="" alt="Certificado en alta resolución" id="lightbox-img" class="lightbox-img">
+        </div>
+        <div class="lightbox-details">
+          <span class="cert-tag" id="lightbox-tag">Credencial</span>
+          <h3 id="lightbox-title">Nombre del Certificado</h3>
+          <p class="cert-issuer" id="lightbox-issuer">Emisor del Certificado</p>
+          <div class="lightbox-desc">
+            <p id="lightbox-desc-text">Detalles del certificado y las habilidades validadas por esta insignia.</p>
+          </div>
+          <div class="lightbox-footer-data">
+            <span class="cert-date" id="lightbox-id">ID: </span>
+            <a href="" target="_blank" rel="noopener noreferrer" class="cert-verify-link btn btn-sm btn-primary" id="lightbox-verify-btn">
+              Verificar Oficialmente <i data-lucide="arrow-up-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lucide Icons Bundle -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script type="module" src="/src/js/main.js"></script>
+  <script>
+    // Initialize Lucide Icons immediately as a fail-safe
+    document.addEventListener("DOMContentLoaded", function() {
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>
