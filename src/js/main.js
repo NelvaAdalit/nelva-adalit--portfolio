@@ -515,10 +515,9 @@ async function getProjects() {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
+      if (data) {
         return data.map(normalizeProjectRecord);
       }
-      return DEFAULT_PROJECTS;
     } catch (e) {
       console.warn("Supabase projects fetch failed. Falling back to local data.", e);
     }
@@ -677,10 +676,9 @@ async function getCertifications() {
 
       if (error) throw error;
 
-      if (data && data.length > 0) {
+      if (data) {
         return data.map(normalizeCertificationRecord);
       }
-      return DEFAULT_CERTIFICATIONS;
     } catch (e) {
       console.warn("Supabase certs fetch failed. Falling back to local data.", e);
     }
@@ -1634,10 +1632,9 @@ async function getAwards() {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      if (data && data.length > 0) {
+      if (data) {
         return data.map(normalizeAwardRecord);
       }
-      return DEFAULT_AWARDS;
     } catch (e) {
       console.warn("Supabase awards fetch failed. Falling back to local data.", e);
     }
