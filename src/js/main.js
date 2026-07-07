@@ -575,14 +575,19 @@ async function renderCertifications() {
       const card = document.createElement('article');
       card.className = 'project-card show';
       card.setAttribute('data-id', cert.id);
+      card.style.cursor = 'pointer';
       
       const title = cert.title || 'Certificado';
       const issuer = cert.issuer || '';
       const description = cert.description || '';
-      const credentialId = cert.credentialId || '';
       const verifyLink = cert.verifyLink || '#';
       const image = cert.image || '/images/award-4.jpg';
       const category = cert.category || 'Credencial';
+
+      // Clic en la tarjeta abre el documento en pestaña nueva
+      card.addEventListener('click', () => {
+        window.open(image, '_blank');
+      });
 
       // Imagen o plantilla SVG si el certificado es un archivo PDF
       const isPdf = image.toLowerCase().endsWith('.pdf') || image.includes('application/pdf');
@@ -601,31 +606,44 @@ async function renderCertifications() {
           </button>
         </div>
         
-        <div class="project-img-wrapper">
-          <div class="project-glow"></div>
-          <img src="${certImg}" alt="${title}" class="project-img" loading="lazy">
-          <span class="project-category-badge">${category}</span>
-        </div>
-        
-        <div class="project-info">
-          <h3 class="project-title">${title}</h3>
-          <p class="project-desc" style="color:var(--text-secondary); margin-bottom:6px;"><strong>Emisor:</strong> ${issuer}</p>
-          <p class="project-desc">${description}</p>
-          
-
-          
-          <div class="project-links">
-            <a href="${image}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-code">
+        <!-- Columna Izquierda: Imagen + Botón de Ver Documento -->
+        <div class="cert-left-column">
+          <div class="project-img-wrapper">
+            <div class="project-glow"></div>
+            <img src="${certImg}" alt="${title}" class="project-img" loading="lazy">
+            <span class="project-category-badge">${category}</span>
+          </div>
+          <div class="cert-action-under-img">
+            <span class="btn-project-link btn-code cert-main-action-btn">
               <i data-lucide="file-text"></i> Ver Documento
-            </a>
-            ${verifyLink && verifyLink !== '#' ? `
-              <a href="${verifyLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo">
-                <i data-lucide="external-link"></i> Verificar
-              </a>
-            ` : ''}
+            </span>
           </div>
         </div>
+        
+        <!-- Columna Derecha: Datos e Info -->
+        <div class="cert-right-column">
+          <h3 class="project-title">${title}</h3>
+          <p class="project-desc" style="color:var(--text-secondary); margin-bottom:4px;"><strong>Emisor:</strong> ${issuer}</p>
+          <p class="project-desc cert-full-desc">${description}</p>
+          
+          ${verifyLink && verifyLink !== '#' ? `
+            <div class="project-links" style="margin-top:auto; padding-top:12px;">
+              <a href="${verifyLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo cert-verify-btn">
+                <i data-lucide="external-link"></i> Verificar Credencial
+              </a>
+            </div>
+          ` : ''}
+        </div>
       `;
+
+      // Evitar que el clic en "Verificar" active el clic de la tarjeta completa
+      const verifyBtn = card.querySelector('.cert-verify-btn');
+      if (verifyBtn) {
+        verifyBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+
       grid.appendChild(card);
     } catch (err) {
       console.error("Error creating certificate card", cert, err);
