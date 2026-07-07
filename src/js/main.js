@@ -555,14 +555,11 @@ async function renderCertifications() {
   grid.innerHTML = '';
 
   if (isAdminMode) {
-    const addCard = document.createElement('div');
-    addCard.className = 'cert-card add-project-card';
+    const addCard = document.createElement('article');
+    addCard.className = 'add-project-card';
     addCard.id = 'add-cert-btn';
-    addCard.style.display = 'flex';
-    addCard.style.minHeight = '200px';
-    addCard.style.cursor = 'pointer';
     addCard.innerHTML = `
-      <div class="add-project-content" style="margin: auto;">
+      <div class="add-project-content">
         <div class="add-icon-box">
           <i data-lucide="plus"></i>
         </div>
@@ -575,17 +572,26 @@ async function renderCertifications() {
 
   certs.forEach(cert => {
     try {
-      const card = document.createElement('div');
-      card.className = 'cert-card interactive-cert';
-      card.setAttribute('data-image', cert.image || '/images/award-4.jpg');
-      card.setAttribute('data-tag', cert.category || 'Credencial');
-      card.setAttribute('data-issuer', cert.issuer || '');
-      card.setAttribute('data-desc', cert.description || '');
-      card.setAttribute('data-id', cert.credentialId || '');
-      card.setAttribute('data-verify', cert.verifyLink || '');
+      const card = document.createElement('article');
+      card.className = 'project-card show';
+      card.setAttribute('data-id', cert.id);
+      
+      const title = cert.title || 'Certificado';
+      const issuer = cert.issuer || '';
+      const description = cert.description || '';
+      const credentialId = cert.credentialId || '';
+      const verifyLink = cert.verifyLink || '#';
+      const image = cert.image || '/images/award-4.jpg';
+      const category = cert.category || 'Credencial';
+
+      // Imagen o plantilla SVG si el certificado es un archivo PDF
+      const isPdf = image.toLowerCase().endsWith('.pdf') || image.includes('application/pdf');
+      const certImg = isPdf 
+        ? `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250" fill="none"><rect width="400" height="250" fill="%231a2333"/><rect x="150" y="50" width="100" height="120" rx="8" fill="%231f293d" stroke="%23ff4a5a" stroke-width="3"/><polyline points="210 50 210 90 250 90" fill="none" stroke="%23ff4a5a" stroke-width="3"/><text x="200" y="210" fill="%23ffffff" font-size="16" font-family="sans-serif" font-weight="bold" text-anchor="middle">DOCUMENTO PDF</text><path d="M175 110 H225 M175 130 H225 M175 150 H200" stroke="%23ff4a5a" stroke-width="2" stroke-linecap="round"/></svg>`
+        : image;
 
       card.innerHTML = `
-        <div class="project-admin-actions" style="${isAdminMode ? 'opacity: 1; pointer-events: auto; transform: translateY(0);' : ''}">
+        <div class="project-admin-actions" style="${isAdminMode ? 'opacity:1; pointer-events:auto; transform:translateY(0);' : ''}">
           <button class="proj-admin-btn cert-btn-edit" data-id="${cert.id}" title="Editar Certificado">
             <i data-lucide="pencil"></i>
           </button>
@@ -593,20 +599,39 @@ async function renderCertifications() {
             <i data-lucide="trash-2"></i>
           </button>
         </div>
-
-        <div class="cert-icon-wrapper">
-          <i data-lucide="${getCertIcon(cert.category)}" class="cert-icon"></i>
+        
+        <div class="project-img-wrapper">
+          <div class="project-glow"></div>
+          <img src="${certImg}" alt="${title}" class="project-img" loading="lazy">
+          <span class="project-category-badge">${category}</span>
         </div>
-        <h3 class="cert-title">${cert.title || 'Certificado'}</h3>
-        <p class="cert-issuer">${cert.issuer || ''}</p>
-        <div class="cert-footer">
-          <span class="cert-date">${cert.credentialId || ''}</span>
-          <span class="cert-preview-trigger">Inspeccionar <i data-lucide="zoom-in"></i></span>
+        
+        <div class="project-info">
+          <h3 class="project-title">${title}</h3>
+          <p class="project-desc" style="color:var(--text-secondary); margin-bottom:6px;"><strong>Emisor:</strong> ${issuer}</p>
+          <p class="project-desc">${description}</p>
+          
+          <div class="project-tech-tags" style="margin-top:10px;">
+            <span class="tech-tag" title="ID de Credencial">
+              <i data-lucide="hash" class="tech-icon"></i> ${credentialId || 'Sin ID'}
+            </span>
+          </div>
+          
+          <div class="project-links">
+            <a href="${image}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-code">
+              <i data-lucide="file-text"></i> Ver Documento
+            </a>
+            ${verifyLink && verifyLink !== '#' ? `
+              <a href="${verifyLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo">
+                <i data-lucide="external-link"></i> Verificar
+              </a>
+            ` : ''}
+          </div>
         </div>
       `;
       grid.appendChild(card);
     } catch (err) {
-      console.error(err);
+      console.error("Error creating certificate card", cert, err);
     }
   });
 
@@ -615,7 +640,6 @@ async function renderCertifications() {
   }
 
   attachCertAdminListeners();
-  initCertificateLightbox();
 }
 
 function attachCertAdminListeners() {
@@ -1228,96 +1252,7 @@ async function deleteCert(id) {
   }
 }
 
-// ==========================================================================
-// 9. CERTIFICATE LIGHTBOX (VISOR ESTILO PRENDA)
-// ==========================================================================
 
-function initCertificateLightbox() {
-  const certCards = document.querySelectorAll('.interactive-cert');
-  const lightbox = document.getElementById('cert-lightbox');
-  const closeBtn = document.getElementById('close-cert-lightbox');
-
-  if (!certCards.length || !lightbox) return;
-
-  const lightboxImg = document.getElementById('lightbox-img');
-  const lightboxPdf = document.getElementById('lightbox-pdf');
-  const lightboxTag = document.getElementById('lightbox-tag');
-  const lightboxTitle = document.getElementById('lightbox-title');
-  const lightboxIssuer = document.getElementById('lightbox-issuer');
-  const lightboxDesc = document.getElementById('lightbox-desc-text');
-  const lightboxId = document.getElementById('lightbox-id');
-  const lightboxVerifyBtn = document.getElementById('lightbox-verify-btn');
-
-  certCards.forEach(card => {
-    card.addEventListener('click', () => {
-      const image = card.getAttribute('data-image') || '';
-      const tag = card.getAttribute('data-tag') || 'Credencial';
-      
-      const titleEl = card.querySelector('.cert-title');
-      const title = titleEl ? titleEl.textContent : 'Certificado';
-      
-      const issuer = card.getAttribute('data-issuer') || '';
-      const desc = card.getAttribute('data-desc') || '';
-      const certId = card.getAttribute('data-id') || '';
-      const verifyUrl = card.getAttribute('data-verify') || '';
-
-      // Mostrar PDF o Imagen según el tipo de archivo
-      if (image.toLowerCase().endsWith('.pdf') || image.includes('application/pdf')) {
-        if (lightboxImg) lightboxImg.style.display = 'none';
-        if (lightboxPdf) {
-          lightboxPdf.src = image;
-          lightboxPdf.style.display = 'block';
-        }
-      } else {
-        if (lightboxPdf) {
-          lightboxPdf.style.display = 'none';
-          lightboxPdf.src = '';
-        }
-        if (lightboxImg) {
-          lightboxImg.src = image;
-          lightboxImg.style.display = 'block';
-        }
-      }
-
-      if (lightboxTag) lightboxTag.textContent = tag;
-      if (lightboxTitle) lightboxTitle.textContent = title;
-      if (lightboxIssuer) lightboxIssuer.textContent = issuer;
-      if (lightboxDesc) lightboxDesc.textContent = desc;
-      if (lightboxId) lightboxId.textContent = certId;
-      if (lightboxVerifyBtn) {
-        if (verifyUrl && verifyUrl !== '#') {
-          lightboxVerifyBtn.href = verifyUrl;
-          lightboxVerifyBtn.style.display = 'inline-flex';
-        } else {
-          lightboxVerifyBtn.style.display = 'none';
-        }
-      }
-
-      lightbox.style.display = 'flex';
-    });
-  });
-
-  const closeLightbox = () => {
-    lightbox.style.display = 'none';
-    if (lightboxPdf) {
-      lightboxPdf.src = ''; // Detener carga del PDF al cerrar
-    }
-  };
-
-  if (closeBtn) closeBtn.onclick = closeLightbox;
-  
-  lightbox.onclick = (e) => {
-    if (e.target === lightbox || e.target.classList.contains('lightbox-container')) {
-      closeLightbox();
-    }
-  };
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && lightbox.style.display === 'flex') {
-      closeLightbox();
-    }
-  });
-}
 
 // ==========================================================================
 // 10. BASE SITE FEATURES (MOBILE NAV, SCROLL EFFECTS, FORM MOCKS)
