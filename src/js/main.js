@@ -147,6 +147,20 @@ function buildCertificationImage(image) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
 }
 
+function hasValidExternalUrl(value) {
+  if (!value || typeof value !== 'string') return false;
+
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function initCertificationDetailModal() {
   const modal = document.getElementById('cert-detail-modal');
   const closeBtn = document.getElementById('close-cert-detail-modal');
@@ -209,8 +223,9 @@ function openCertificationDetailModal(cert) {
   }
 
   if (verifyBtn) {
-    verifyBtn.href = verifyLink || '#';
-    verifyBtn.style.display = verifyLink ? 'inline-flex' : 'none';
+    const showVerify = hasValidExternalUrl(verifyLink);
+    verifyBtn.href = showVerify ? verifyLink.trim() : '#';
+    verifyBtn.style.display = showVerify ? 'inline-flex' : 'none';
   }
 
   modal.style.display = 'flex';
@@ -666,10 +681,11 @@ async function renderCertifications() {
       const issuer = cert.issuer || '';
       const description = cert.description || '';
       const credentialId = cert.credentialId || '';
-      const verifyLink = cert.verifyLink || '#';
+      const verifyLink = cert.verifyLink || '';
       const image = cert.image || '/images/award-4.jpg';
       const category = cert.category || 'Credencial';
       const certImg = buildCertificationImage(image);
+      const showVerifyLink = hasValidExternalUrl(verifyLink);
 
       card.innerHTML = `
         <div class="project-admin-actions" style="${isAdminMode ? 'opacity:1; pointer-events:auto; transform:translateY(0);' : ''}">
@@ -697,7 +713,7 @@ async function renderCertifications() {
               <i data-lucide="file-text"></i> Ver Documento
             </a>
             <button type="button" class="btn-project-link btn-demo cert-more-btn">Ver más</button>
-            ${verifyLink && verifyLink !== '#' ? `
+            ${showVerifyLink ? `
               <a href="${verifyLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo">
                 <i data-lucide="external-link"></i> Verificar
               </a>
