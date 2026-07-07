@@ -131,6 +131,91 @@ function normalizeCertificationRecord(certification) {
   };
 }
 
+function getShortDescription(text, limit = 110) {
+  if (!text) return '';
+  if (text.length <= limit) return text;
+  return `${text.slice(0, limit).trim()}...`;
+}
+
+function buildCertificationImage(image) {
+  const source = image || '/images/award-4.jpg';
+  const isPdf = source.toLowerCase().endsWith('.pdf') || source.includes('application/pdf');
+
+  if (!isPdf) return source;
+
+  const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250" fill="none"><rect width="400" height="250" fill="#1a2333"/><rect x="150" y="50" width="100" height="120" rx="8" fill="#1f293d" stroke="#ff4a5a" stroke-width="3"/><polyline points="210 50 210 90 250 90" fill="none" stroke="#ff4a5a" stroke-width="3"/><text x="200" y="210" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold" text-anchor="middle">DOCUMENTO PDF</text><path d="M175 110 H225 M175 130 H225 M175 150 H200" stroke="#ff4a5a" stroke-width="2" stroke-linecap="round"/></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
+}
+
+function initCertificationDetailModal() {
+  const modal = document.getElementById('cert-detail-modal');
+  const closeBtn = document.getElementById('close-cert-detail-modal');
+
+  if (!modal) return;
+
+  const closeModal = () => {
+    modal.style.display = 'none';
+  };
+
+  if (closeBtn) {
+    closeBtn.onclick = closeModal;
+  }
+
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      closeModal();
+    }
+  });
+}
+
+function openCertificationDetailModal(cert) {
+  const modal = document.getElementById('cert-detail-modal');
+  if (!modal || !cert) return;
+
+  const title = cert.title || 'Certificado';
+  const issuer = cert.issuer || '';
+  const description = cert.description || '';
+  const credentialId = cert.credentialId || '';
+  const verifyLink = cert.verifyLink || '';
+  const image = buildCertificationImage(cert.image);
+  const category = cert.category || 'Credencial';
+
+  const imgEl = document.getElementById('cert-detail-img');
+  const tagEl = document.getElementById('cert-detail-tag');
+  const titleEl = document.getElementById('cert-detail-title');
+  const issuerEl = document.getElementById('cert-detail-issuer');
+  const descEl = document.getElementById('cert-detail-desc-text');
+  const idEl = document.getElementById('cert-detail-id');
+  const docLink = document.getElementById('cert-detail-doc-link');
+  const verifyBtn = document.getElementById('cert-detail-verify-btn');
+
+  if (imgEl) {
+    imgEl.src = image;
+    imgEl.alt = title;
+  }
+  if (tagEl) tagEl.textContent = category;
+  if (titleEl) titleEl.textContent = title;
+  if (issuerEl) issuerEl.textContent = issuer;
+  if (descEl) descEl.textContent = description;
+  if (idEl) idEl.textContent = credentialId;
+
+  if (docLink) {
+    docLink.href = cert.image || '#';
+    docLink.style.display = cert.image ? 'inline-flex' : 'none';
+  }
+
+  if (verifyBtn) {
+    verifyBtn.href = verifyLink || '#';
+    verifyBtn.style.display = verifyLink ? 'inline-flex' : 'none';
+  }
+
+  modal.style.display = 'flex';
+}
+
 // --- Global App State ---
 let supabaseClient = null;
 let isAdminMode = false;
@@ -151,6 +236,7 @@ const init = () => {
     { name: "Auth Forms", fn: initAuthForm },
     { name: "Project Form CRUD", fn: initProjectForm },
     { name: "Certificate Form CRUD", fn: initCertificateForm },
+    { name: "Certificate Detail Modal", fn: initCertificationDetailModal },
     { name: "File Upload Previews", fn: initFileUploadPreviews },
     { name: "Scroll Effects", fn: initScrollEffects },
     { name: "Scroll Reveal", fn: initScrollReveal },
@@ -538,46 +624,6 @@ async function getCertifications() {
   return inMemoryCerts.map(normalizeCertificationRecord);
 }
 
-function formatDescriptionToggle(desc) {
-  if (!desc) return '';
-  const limit = 110;
-  if (desc.length <= limit) {
-    return `<p class="project-desc">${desc}</p>`;
-  }
-  
-  const truncated = desc.substring(0, limit);
-  return `
-    <p class="project-desc desc-toggle-container">
-      <span class="desc-short">${truncated}... <span class="read-more-btn" style="color:var(--color-accent); cursor:pointer; font-weight:600; font-size:0.8rem; text-decoration:underline;">Ver más</span></span>
-      <span class="desc-full" style="display:none;">${desc} <span class="read-less-btn" style="color:var(--color-accent); cursor:pointer; font-weight:600; font-size:0.8rem; text-decoration:underline; margin-left:4px;">Ver menos</span></span>
-    </p>
-  `;
-}
-
-function attachDescriptionToggleListeners(parentContainer) {
-  if (!parentContainer) return;
-  const containers = parentContainer.querySelectorAll('.desc-toggle-container');
-  containers.forEach(container => {
-    const shortEl = container.querySelector('.desc-short');
-    const fullEl = container.querySelector('.desc-full');
-    const moreBtn = container.querySelector('.read-more-btn');
-    const lessBtn = container.querySelector('.read-less-btn');
-
-    if (moreBtn && lessBtn && shortEl && fullEl) {
-      moreBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        shortEl.style.display = 'none';
-        fullEl.style.display = 'inline';
-      });
-      lessBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        shortEl.style.display = 'inline';
-        fullEl.style.display = 'none';
-      });
-    }
-  });
-}
-
 async function renderCertifications() {
   const grid = document.getElementById('certs-grid');
   if (!grid) return;
@@ -623,13 +669,7 @@ async function renderCertifications() {
       const verifyLink = cert.verifyLink || '#';
       const image = cert.image || '/images/award-4.jpg';
       const category = cert.category || 'Credencial';
-
-      // Imagen o plantilla SVG si el certificado es un archivo PDF
-      const isPdf = image.toLowerCase().endsWith('.pdf') || image.includes('application/pdf');
-      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250" fill="none"><rect width="400" height="250" fill="#1a2333"/><rect x="150" y="50" width="100" height="120" rx="8" fill="#1f293d" stroke="#ff4a5a" stroke-width="3"/><polyline points="210 50 210 90 250 90" fill="none" stroke="#ff4a5a" stroke-width="3"/><text x="200" y="210" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold" text-anchor="middle">DOCUMENTO PDF</text><path d="M175 110 H225 M175 130 H225 M175 150 H200" stroke="#ff4a5a" stroke-width="2" stroke-linecap="round"/></svg>`;
-      const certImg = isPdf 
-        ? `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`
-        : image;
+      const certImg = buildCertificationImage(image);
 
       card.innerHTML = `
         <div class="project-admin-actions" style="${isAdminMode ? 'opacity:1; pointer-events:auto; transform:translateY(0);' : ''}">
@@ -650,12 +690,13 @@ async function renderCertifications() {
         <div class="project-info">
           <h3 class="project-title">${title}</h3>
           <p class="project-desc" style="color:var(--text-secondary); margin-bottom:6px;"><strong>Emisor:</strong> ${issuer}</p>
-          ${formatDescriptionToggle(description)}
+          <p class="cert-description-preview">${getShortDescription(description, 120)}</p>
           
           <div class="project-links">
             <a href="${image}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-code">
               <i data-lucide="file-text"></i> Ver Documento
             </a>
+            <button type="button" class="btn-project-link btn-demo cert-more-btn">Ver más</button>
             ${verifyLink && verifyLink !== '#' ? `
               <a href="${verifyLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo">
                 <i data-lucide="external-link"></i> Verificar
@@ -665,6 +706,22 @@ async function renderCertifications() {
         </div>
       `;
       grid.appendChild(card);
+
+      const moreBtn = card.querySelector('.cert-more-btn');
+      if (moreBtn) {
+        moreBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openCertificationDetailModal({
+            title,
+            issuer,
+            description,
+            credentialId,
+            verifyLink,
+            image,
+            category
+          });
+        });
+      }
     } catch (err) {
       console.error("Error creating certificate card", cert, err);
     }
@@ -675,7 +732,6 @@ async function renderCertifications() {
   }
 
   attachCertAdminListeners();
-  attachDescriptionToggleListeners(grid);
 }
 
 function attachCertAdminListeners() {

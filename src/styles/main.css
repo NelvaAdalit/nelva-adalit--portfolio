@@ -612,6 +612,17 @@ button {
   overflow: hidden;
 }
 
+.cert-description-preview {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  margin-bottom: 18px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .project-tech-tags {
   display: flex;
   flex-wrap: wrap;
@@ -648,6 +659,10 @@ button {
 .project-links {
   display: flex;
   gap: 12px;
+}
+
+.project-links .cert-more-btn {
+  cursor: pointer;
 }
 
 .btn-project-link {
@@ -1104,6 +1119,39 @@ button {
   padding-top: 20px;
 }
 
+.cert-detail-container {
+  max-width: 1100px;
+}
+
+.cert-detail-content {
+  grid-template-columns: 0.9fr 1.1fr;
+}
+
+.cert-detail-image-wrapper {
+  padding: 24px;
+}
+
+.cert-detail-details {
+  justify-content: flex-start;
+}
+
+.cert-detail-desc {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.cert-detail-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cert-detail-actions .btn,
+.cert-detail-actions .cert-verify-link {
+  white-space: nowrap;
+}
+
 .lightbox-footer-data .cert-date {
   font-family: var(--font-heading);
   color: var(--text-muted);
@@ -1299,6 +1347,20 @@ button {
     min-width: 100%;
     height: 180px;
     min-height: auto;
+  }
+
+  .cert-detail-content {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .cert-detail-image-wrapper {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .cert-detail-actions {
+    justify-content: flex-start;
   }
 }
 
