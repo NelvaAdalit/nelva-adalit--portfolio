@@ -612,6 +612,13 @@ button {
   overflow: hidden;
 }
 
+.project-desc.expanded {
+  display: block !important;
+  -webkit-line-clamp: none !important;
+  overflow: visible !important;
+  white-space: pre-line !important;
+}
+
 .cert-description-preview {
   color: var(--text-secondary);
   font-size: 0.92rem;

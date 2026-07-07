@@ -667,11 +667,13 @@ function attachDescriptionToggleListeners(parentContainer) {
     if (moreBtn && lessBtn && shortEl && fullEl) {
       moreBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        container.classList.add('expanded');
         shortEl.style.display = 'none';
         fullEl.style.display = 'inline';
       });
       lessBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        container.classList.remove('expanded');
         shortEl.style.display = 'inline';
         fullEl.style.display = 'none';
       });
