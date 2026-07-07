@@ -706,13 +706,12 @@ async function renderCertifications() {
         <div class="project-info">
           <h3 class="project-title">${title}</h3>
           <p class="project-desc" style="color:var(--text-secondary); margin-bottom:6px;"><strong>Emisor:</strong> ${issuer}</p>
-          <p class="cert-description-preview">${getShortDescription(description, 120)}</p>
+          ${formatDescriptionToggle(description)}
           
           <div class="project-links">
             <a href="${image}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-code">
               <i data-lucide="file-text"></i> Ver Documento
             </a>
-            <button type="button" class="btn-project-link btn-demo cert-more-btn">Ver más</button>
             ${showVerifyLink ? `
               <a href="${verifyLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo">
                 <i data-lucide="external-link"></i> Verificar
@@ -722,22 +721,6 @@ async function renderCertifications() {
         </div>
       `;
       grid.appendChild(card);
-
-      const moreBtn = card.querySelector('.cert-more-btn');
-      if (moreBtn) {
-        moreBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          openCertificationDetailModal({
-            title,
-            issuer,
-            description,
-            credentialId,
-            verifyLink,
-            image,
-            category
-          });
-        });
-      }
     } catch (err) {
       console.error("Error creating certificate card", cert, err);
     }
@@ -748,6 +731,7 @@ async function renderCertifications() {
   }
 
   attachCertAdminListeners();
+  attachDescriptionToggleListeners(grid);
 }
 
 function attachCertAdminListeners() {

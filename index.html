@@ -53,36 +53,7 @@
 
       <div class="nav-actions">
 
-  <!-- Modal Detalle de Certificación -->
-  <div class="modal-overlay lightbox-overlay" id="cert-detail-modal" style="display: none;">
-    <div class="lightbox-container cert-detail-container">
-      <button class="lightbox-close" id="close-cert-detail-modal" aria-label="Cerrar visor">&times;</button>
-      <div class="lightbox-content cert-detail-content">
-        <div class="lightbox-image-wrapper cert-detail-image-wrapper">
-          <img src="" alt="Certificado en alta resolución" id="cert-detail-img" class="lightbox-img">
-        </div>
-        <div class="lightbox-details cert-detail-details">
-          <span class="cert-tag" id="cert-detail-tag">Credencial</span>
-          <h3 id="cert-detail-title">Nombre del Certificado</h3>
-          <p class="cert-issuer" id="cert-detail-issuer">Emisor del Certificado</p>
-          <div class="lightbox-desc cert-detail-desc">
-            <p id="cert-detail-desc-text">Detalles del certificado y las habilidades validadas por esta credencial.</p>
-          </div>
-          <div class="lightbox-footer-data cert-detail-footer">
-            <span class="cert-date" id="cert-detail-id"></span>
-            <div class="cert-detail-actions">
-              <a href="#" target="_blank" rel="noopener noreferrer" class="cert-verify-link btn btn-sm btn-primary" id="cert-detail-doc-link">
-                Ver Documento <i data-lucide="file-text"></i>
-              </a>
-              <a href="#" target="_blank" rel="noopener noreferrer" class="cert-verify-link btn btn-sm btn-outline" id="cert-detail-verify-btn">
-                Verificar <i data-lucide="external-link"></i>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+
         <!-- Admin Toggle Switch -->
         <button class="btn btn-sm btn-outline btn-admin-toggle" id="admin-toggle" onclick="if(window.handleAdminToggleClick) { window.handleAdminToggleClick(); } else { const modal = document.getElementById('login-modal'); if(modal) modal.style.display='flex'; }">
           <i data-lucide="lock"></i> <span id="admin-toggle-text">Modo Editor</span>
