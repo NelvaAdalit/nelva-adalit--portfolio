@@ -475,7 +475,7 @@
         </div>
         <div class="form-group">
           <label for="cert-image-file">Imagen del Certificado / Diploma (Cargar archivo)</label>
-          <input type="file" id="cert-image-file" accept="image/*">
+          <input type="file" id="cert-image-file" accept="image/*, application/pdf">
           <input type="hidden" id="cert-image" name="image">
           <div id="cert-image-preview-container" style="display:none; margin-top:8px;">
             <span style="font-size:0.75rem; color:var(--text-muted);">Vista previa:</span>
@@ -494,6 +494,7 @@
       <div class="lightbox-content">
         <div class="lightbox-image-wrapper">
           <img src="" alt="Certificado en alta resolución" id="lightbox-img" class="lightbox-img">
+          <iframe src="" id="lightbox-pdf" class="lightbox-pdf" style="display: none; width: 100%; height: 100%; min-height: 500px; border: none; border-radius: var(--radius-sm);"></iframe>
         </div>
         <div class="lightbox-details">
           <span class="cert-tag" id="lightbox-tag">Credencial</span>

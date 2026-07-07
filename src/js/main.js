@@ -317,15 +317,21 @@ function initFileUploadPreviews() {
     fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          previewImg.src = event.target.result;
+        if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+          previewImg.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="%23ff4a5a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><text x="5" y="16" fill="%23ff4a5a" font-size="4.5" font-family="sans-serif" font-weight="bold">PDF</text></svg>`;
           container.style.display = 'block';
-          if (hiddenInput) {
-            hiddenInput.value = "PENDING_FILE_UPLOAD";
-          }
-        };
-        reader.readAsDataURL(file);
+          if (hiddenInput) hiddenInput.value = "PENDING_FILE_UPLOAD";
+        } else {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            previewImg.src = event.target.result;
+            container.style.display = 'block';
+            if (hiddenInput) {
+              hiddenInput.value = "PENDING_FILE_UPLOAD";
+            }
+          };
+          reader.readAsDataURL(file);
+        }
       } else {
         container.style.display = 'none';
         if (hiddenInput) hiddenInput.value = '';
@@ -1234,6 +1240,7 @@ function initCertificateLightbox() {
   if (!certCards.length || !lightbox) return;
 
   const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxPdf = document.getElementById('lightbox-pdf');
   const lightboxTag = document.getElementById('lightbox-tag');
   const lightboxTitle = document.getElementById('lightbox-title');
   const lightboxIssuer = document.getElementById('lightbox-issuer');
@@ -1254,7 +1261,24 @@ function initCertificateLightbox() {
       const certId = card.getAttribute('data-id') || '';
       const verifyUrl = card.getAttribute('data-verify') || '';
 
-      if (lightboxImg) lightboxImg.src = image;
+      // Mostrar PDF o Imagen según el tipo de archivo
+      if (image.toLowerCase().endsWith('.pdf') || image.includes('application/pdf')) {
+        if (lightboxImg) lightboxImg.style.display = 'none';
+        if (lightboxPdf) {
+          lightboxPdf.src = image;
+          lightboxPdf.style.display = 'block';
+        }
+      } else {
+        if (lightboxPdf) {
+          lightboxPdf.style.display = 'none';
+          lightboxPdf.src = '';
+        }
+        if (lightboxImg) {
+          lightboxImg.src = image;
+          lightboxImg.style.display = 'block';
+        }
+      }
+
       if (lightboxTag) lightboxTag.textContent = tag;
       if (lightboxTitle) lightboxTitle.textContent = title;
       if (lightboxIssuer) lightboxIssuer.textContent = issuer;
@@ -1275,6 +1299,9 @@ function initCertificateLightbox() {
 
   const closeLightbox = () => {
     lightbox.style.display = 'none';
+    if (lightboxPdf) {
+      lightboxPdf.src = ''; // Detener carga del PDF al cerrar
+    }
   };
 
   if (closeBtn) closeBtn.onclick = closeLightbox;
