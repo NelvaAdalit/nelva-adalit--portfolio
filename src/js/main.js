@@ -538,6 +538,46 @@ async function getCertifications() {
   return inMemoryCerts.map(normalizeCertificationRecord);
 }
 
+function formatDescriptionToggle(desc) {
+  if (!desc) return '';
+  const limit = 110;
+  if (desc.length <= limit) {
+    return `<p class="project-desc">${desc}</p>`;
+  }
+  
+  const truncated = desc.substring(0, limit);
+  return `
+    <p class="project-desc desc-toggle-container">
+      <span class="desc-short">${truncated}... <span class="read-more-btn" style="color:var(--color-accent); cursor:pointer; font-weight:600; font-size:0.8rem; text-decoration:underline;">Ver más</span></span>
+      <span class="desc-full" style="display:none;">${desc} <span class="read-less-btn" style="color:var(--color-accent); cursor:pointer; font-weight:600; font-size:0.8rem; text-decoration:underline; margin-left:4px;">Ver menos</span></span>
+    </p>
+  `;
+}
+
+function attachDescriptionToggleListeners(parentContainer) {
+  if (!parentContainer) return;
+  const containers = parentContainer.querySelectorAll('.desc-toggle-container');
+  containers.forEach(container => {
+    const shortEl = container.querySelector('.desc-short');
+    const fullEl = container.querySelector('.desc-full');
+    const moreBtn = container.querySelector('.read-more-btn');
+    const lessBtn = container.querySelector('.read-less-btn');
+
+    if (moreBtn && lessBtn && shortEl && fullEl) {
+      moreBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        shortEl.style.display = 'none';
+        fullEl.style.display = 'inline';
+      });
+      lessBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        shortEl.style.display = 'inline';
+        fullEl.style.display = 'none';
+      });
+    }
+  });
+}
+
 async function renderCertifications() {
   const grid = document.getElementById('certs-grid');
   if (!grid) return;
@@ -575,19 +615,14 @@ async function renderCertifications() {
       const card = document.createElement('article');
       card.className = 'project-card show';
       card.setAttribute('data-id', cert.id);
-      card.style.cursor = 'pointer';
       
       const title = cert.title || 'Certificado';
       const issuer = cert.issuer || '';
       const description = cert.description || '';
+      const credentialId = cert.credentialId || '';
       const verifyLink = cert.verifyLink || '#';
       const image = cert.image || '/images/award-4.jpg';
       const category = cert.category || 'Credencial';
-
-      // Clic en la tarjeta abre el documento en pestaña nueva
-      card.addEventListener('click', () => {
-        window.open(image, '_blank');
-      });
 
       // Imagen o plantilla SVG si el certificado es un archivo PDF
       const isPdf = image.toLowerCase().endsWith('.pdf') || image.includes('application/pdf');
@@ -606,44 +641,29 @@ async function renderCertifications() {
           </button>
         </div>
         
-        <!-- Columna Izquierda: Imagen + Botón de Ver Documento -->
-        <div class="cert-left-column">
-          <div class="project-img-wrapper">
-            <div class="project-glow"></div>
-            <img src="${certImg}" alt="${title}" class="project-img" loading="lazy">
-            <span class="project-category-badge">${category}</span>
-          </div>
-          <div class="cert-action-under-img">
-            <span class="btn-project-link btn-code cert-main-action-btn">
-              <i data-lucide="file-text"></i> Ver Documento
-            </span>
-          </div>
+        <div class="project-img-wrapper">
+          <div class="project-glow"></div>
+          <img src="${certImg}" alt="${title}" class="project-img" loading="lazy">
+          <span class="project-category-badge">${category}</span>
         </div>
         
-        <!-- Columna Derecha: Datos e Info -->
-        <div class="cert-right-column">
+        <div class="project-info">
           <h3 class="project-title">${title}</h3>
-          <p class="project-desc" style="color:var(--text-secondary); margin-bottom:4px;"><strong>Emisor:</strong> ${issuer}</p>
-          <p class="project-desc cert-full-desc">${description}</p>
+          <p class="project-desc" style="color:var(--text-secondary); margin-bottom:6px;"><strong>Emisor:</strong> ${issuer}</p>
+          ${formatDescriptionToggle(description)}
           
-          ${verifyLink && verifyLink !== '#' ? `
-            <div class="project-links" style="margin-top:auto; padding-top:12px;">
-              <a href="${verifyLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo cert-verify-btn">
-                <i data-lucide="external-link"></i> Verificar Credencial
+          <div class="project-links">
+            <a href="${image}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-code">
+              <i data-lucide="file-text"></i> Ver Documento
+            </a>
+            ${verifyLink && verifyLink !== '#' ? `
+              <a href="${verifyLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo">
+                <i data-lucide="external-link"></i> Verificar
               </a>
-            </div>
-          ` : ''}
+            ` : ''}
+          </div>
         </div>
       `;
-
-      // Evitar que el clic en "Verificar" active el clic de la tarjeta completa
-      const verifyBtn = card.querySelector('.cert-verify-btn');
-      if (verifyBtn) {
-        verifyBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-        });
-      }
-
       grid.appendChild(card);
     } catch (err) {
       console.error("Error creating certificate card", cert, err);
@@ -655,6 +675,7 @@ async function renderCertifications() {
   }
 
   attachCertAdminListeners();
+  attachDescriptionToggleListeners(grid);
 }
 
 function attachCertAdminListeners() {
