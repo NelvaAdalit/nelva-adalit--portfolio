@@ -586,8 +586,9 @@ async function renderCertifications() {
 
       // Imagen o plantilla SVG si el certificado es un archivo PDF
       const isPdf = image.toLowerCase().endsWith('.pdf') || image.includes('application/pdf');
+      const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250" fill="none"><rect width="400" height="250" fill="#1a2333"/><rect x="150" y="50" width="100" height="120" rx="8" fill="#1f293d" stroke="#ff4a5a" stroke-width="3"/><polyline points="210 50 210 90 250 90" fill="none" stroke="#ff4a5a" stroke-width="3"/><text x="200" y="210" fill="#ffffff" font-size="16" font-family="sans-serif" font-weight="bold" text-anchor="middle">DOCUMENTO PDF</text><path d="M175 110 H225 M175 130 H225 M175 150 H200" stroke="#ff4a5a" stroke-width="2" stroke-linecap="round"/></svg>`;
       const certImg = isPdf 
-        ? `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="250" viewBox="0 0 400 250" fill="none"><rect width="400" height="250" fill="%231a2333"/><rect x="150" y="50" width="100" height="120" rx="8" fill="%231f293d" stroke="%23ff4a5a" stroke-width="3"/><polyline points="210 50 210 90 250 90" fill="none" stroke="%23ff4a5a" stroke-width="3"/><text x="200" y="210" fill="%23ffffff" font-size="16" font-family="sans-serif" font-weight="bold" text-anchor="middle">DOCUMENTO PDF</text><path d="M175 110 H225 M175 130 H225 M175 150 H200" stroke="%23ff4a5a" stroke-width="2" stroke-linecap="round"/></svg>`
+        ? `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`
         : image;
 
       card.innerHTML = `
