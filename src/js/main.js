@@ -639,6 +639,46 @@ async function getCertifications() {
   return inMemoryCerts.map(normalizeCertificationRecord);
 }
 
+function formatDescriptionToggle(desc) {
+  if (!desc) return '';
+  const limit = 110;
+  if (desc.length <= limit) {
+    return `<p class="project-desc">${desc}</p>`;
+  }
+  
+  const truncated = desc.substring(0, limit);
+  return `
+    <p class="project-desc desc-toggle-container">
+      <span class="desc-short">${truncated}... <span class="read-more-btn" style="color:var(--color-accent); cursor:pointer; font-weight:600; font-size:0.8rem; text-decoration:underline;">Ver más</span></span>
+      <span class="desc-full" style="display:none;">${desc} <span class="read-less-btn" style="color:var(--color-accent); cursor:pointer; font-weight:600; font-size:0.8rem; text-decoration:underline; margin-left:4px;">Ver menos</span></span>
+    </p>
+  `;
+}
+
+function attachDescriptionToggleListeners(parentContainer) {
+  if (!parentContainer) return;
+  const containers = parentContainer.querySelectorAll('.desc-toggle-container');
+  containers.forEach(container => {
+    const shortEl = container.querySelector('.desc-short');
+    const fullEl = container.querySelector('.desc-full');
+    const moreBtn = container.querySelector('.read-more-btn');
+    const lessBtn = container.querySelector('.read-less-btn');
+
+    if (moreBtn && lessBtn && shortEl && fullEl) {
+      moreBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        shortEl.style.display = 'none';
+        fullEl.style.display = 'inline';
+      });
+      lessBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        shortEl.style.display = 'inline';
+        fullEl.style.display = 'none';
+      });
+    }
+  });
+}
+
 async function renderCertifications() {
   const grid = document.getElementById('certs-grid');
   if (!grid) return;
