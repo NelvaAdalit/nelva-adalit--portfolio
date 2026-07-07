@@ -101,6 +101,48 @@ const DEFAULT_CERTIFICATIONS = [
   }
 ];
 
+const DEFAULT_AWARDS = [
+  {
+    id: "award-1",
+    title: "Hackathon de Innovación",
+    tag: "Primer Lugar",
+    description: "Solución IA aplicada a la sustentabilidad regional.",
+    image: "/images/award-1.jpg"
+  },
+  {
+    id: "award-2",
+    title: "Excelencia Universitaria",
+    tag: "Académico",
+    description: "Reconocimiento al promedio sobresaliente.",
+    image: "/images/award-2.jpg"
+  },
+  {
+    id: "award-3",
+    title: "Disciplina Militar",
+    tag: "Honorífico",
+    description: "Mención al valor y cumplimiento ejemplar.",
+    image: "/images/award-3.jpg"
+  },
+  {
+    id: "award-4",
+    title: "Certificación C1 Advanced",
+    tag: "Idiomas",
+    description: "Nivel lingüístico superior avalado internacionalmente.",
+    image: "/images/award-4.jpg"
+  }
+];
+
+function normalizeAwardRecord(award) {
+  if (!award) return award;
+  return {
+    id: award.id,
+    title: award.title ?? '',
+    tag: award.tag ?? '',
+    description: award.description ?? '',
+    image: award.image ?? ''
+  };
+}
+
 function normalizeProjectRecord(project) {
   if (!project) return project;
 
@@ -237,6 +279,7 @@ let isAdminMode = false;
 let currentFilter = 'all';
 let inMemoryProjects = [...DEFAULT_PROJECTS];
 let inMemoryCerts = [...DEFAULT_CERTIFICATIONS];
+let inMemoryAwards = [...DEFAULT_AWARDS];
 
 // --- Initialization Wrapper ---
 const init = () => {
@@ -251,7 +294,8 @@ const init = () => {
     { name: "Auth Forms", fn: initAuthForm },
     { name: "Project Form CRUD", fn: initProjectForm },
     { name: "Certificate Form CRUD", fn: initCertificateForm },
-    { name: "Certificate Detail Modal", fn: initCertificationDetailModal },
+    { name: "Profile Biography CRUD", fn: initProfileForm },
+    { name: "Achievements CRUD", fn: initAwardForm },
     { name: "File Upload Previews", fn: initFileUploadPreviews },
     { name: "Scroll Effects", fn: initScrollEffects },
     { name: "Scroll Reveal", fn: initScrollReveal },
@@ -297,6 +341,12 @@ async function loadDataAndRender() {
   }
 
   try {
+    await renderProfile();
+  } catch (e) {
+    console.error("Profile render failed", e);
+  }
+
+  try {
     await renderProjects();
   } catch (e) {
     console.error("Projects grid render failed", e);
@@ -306,6 +356,12 @@ async function loadDataAndRender() {
     await renderCertifications();
   } catch (e) {
     console.error("Certifications grid render failed", e);
+  }
+
+  try {
+    await renderAwards();
+  } catch (e) {
+    console.error("Awards gallery render failed", e);
   }
 }
 
@@ -442,6 +498,7 @@ function initFileUploadPreviews() {
 
   setupPreview('proj-image-file', 'proj-image-preview', 'proj-image-preview-container', 'proj-image');
   setupPreview('cert-image-file', 'cert-image-preview', 'cert-image-preview-container', 'cert-image');
+  setupPreview('award-image-file', 'award-image-preview', 'award-image-preview-container', 'award-image');
 }
 
 // ==========================================================================
@@ -549,7 +606,7 @@ async function renderProjects() {
         
         <div class="project-info">
           <h3 class="project-title">${title}</h3>
-          <p class="project-desc">${desc}</p>
+          ${formatDescriptionToggle(desc)}
           
           <div class="project-tech-tags">
             ${techsStr ? techsStr.split(',').map(tech => {
@@ -584,6 +641,7 @@ async function renderProjects() {
   }
 
   attachCardAdminListeners();
+  attachDescriptionToggleListeners(grid);
 }
 
 function attachCardAdminListeners() {
@@ -1387,7 +1445,479 @@ async function deleteCert(id) {
   }
 }
 
+// ==========================================================================
+// 8. PROFILE BIOGRAPHY DATABASE READS, RENDERING & WRITES
+// ==========================================================================
 
+async function getProfile() {
+  const defaultProfile = {
+    id: 'main_profile',
+    about_subtitle: 'Disciplina, Resiliencia y Enfoque Técnico',
+    about_text_1: 'Mi trayectoria profesional está guiada por la firme convicción de que los mejores resultados técnicos nacen de la constancia y la organización rigurosa. A lo largo de mi formación, he consolidado habilidades duras en el desarrollo frontend y el análisis computacional.',
+    about_text_2: 'Busco integrar mis conocimientos estructurados de Bizagi/UML con la velocidad de desarrollo de frameworks modernos de JavaScript y la automatización inteligente por medio de IA.',
+    highlight_1_title: 'Servicio Militar de Honor',
+    highlight_1_desc: 'Mi paso por el servicio militar me enseñó la importancia del trabajo en equipo coordinado, la adaptabilidad bajo alta presión laboral y el cumplimiento estricto de directrices con excelencia.',
+    highlight_2_title: 'Competencia Global en Inglés',
+    highlight_2_desc: 'He completado estudios avanzados en el idioma inglés, lo que me capacita para comprender documentación técnica de alto nivel, coordinar con equipos multiculturales y desempeñarme internacionalmente con soltura (Nivel C1/B2).'
+  };
+
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('perfil')
+        .select('*')
+        .eq('id', 'main_profile')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) return data;
+    } catch (e) {
+      console.warn("Supabase profile fetch failed, using default data.", e);
+    }
+  }
+
+  try {
+    const localProfile = localStorage.getItem('nelva_profile');
+    if (localProfile) return JSON.parse(localProfile);
+  } catch (err) {}
+
+  return defaultProfile;
+}
+
+async function renderProfile() {
+  const container = document.getElementById('bio-container');
+  if (!container) return;
+
+  const profile = await getProfile();
+
+  let adminBtnHtml = '';
+  if (isAdminMode) {
+    adminBtnHtml = `
+      <div style="position: absolute; top: 0; right: 0; z-index: 10;">
+        <button class="proj-admin-btn" id="edit-bio-btn" title="Editar Biografía" style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-secondary); border: 1px solid var(--glass-border); color: var(--color-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all var(--transition-fast);">
+          <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
+        </button>
+      </div>
+    `;
+  }
+
+  container.innerHTML = `
+    ${adminBtnHtml}
+    <h3 class="about-subtitle">${profile.about_subtitle}</h3>
+    <p class="about-paragraph">${profile.about_text_1}</p>
+    
+    <div class="highlight-box">
+      <div class="highlight-icon">
+        <i data-lucide="shield-check"></i>
+      </div>
+      <div class="highlight-info">
+        <h4>${profile.highlight_1_title}</h4>
+        <p>${profile.highlight_1_desc}</p>
+      </div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-icon">
+        <i data-lucide="languages"></i>
+      </div>
+      <div class="highlight-info">
+        <h4>${profile.highlight_2_title}</h4>
+        <p>${profile.highlight_2_desc}</p>
+      </div>
+    </div>
+
+    <p class="about-paragraph">${profile.about_text_2}</p>
+  `;
+
+  if (typeof lucide !== 'undefined') {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+
+  if (isAdminMode) {
+    const editBtn = document.getElementById('edit-bio-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => openBioModal(profile));
+    }
+  }
+}
+
+function openBioModal(profile) {
+  const modal = document.getElementById('bio-modal');
+  if (!modal) return;
+
+  document.getElementById('bio-subtitle-input').value = profile.about_subtitle || '';
+  document.getElementById('bio-text1-input').value = profile.about_text_1 || '';
+  document.getElementById('bio-text2-input').value = profile.about_text_2 || '';
+  document.getElementById('bio-h1-title-input').value = profile.highlight_1_title || '';
+  document.getElementById('bio-h1-desc-input').value = profile.highlight_1_desc || '';
+  document.getElementById('bio-h2-title-input').value = profile.highlight_2_title || '';
+  document.getElementById('bio-h2-desc-input').value = profile.highlight_2_desc || '';
+
+  modal.style.display = 'flex';
+
+  const closeBtn = document.getElementById('close-bio-modal');
+  const closeModal = () => { modal.style.display = 'none'; };
+  if (closeBtn) closeBtn.onclick = closeModal;
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+}
+
+function initProfileForm() {
+  const form = document.getElementById('bio-form');
+  const modal = document.getElementById('bio-modal');
+  const submitBtn = document.getElementById('btn-save-bio');
+
+  if (!form || !modal || !submitBtn) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const about_subtitle = document.getElementById('bio-subtitle-input').value.trim();
+    const about_text_1 = document.getElementById('bio-text1-input').value.trim();
+    const about_text_2 = document.getElementById('bio-text2-input').value.trim();
+    const highlight_1_title = document.getElementById('bio-h1-title-input').value.trim();
+    const highlight_1_desc = document.getElementById('bio-h1-desc-input').value.trim();
+    const highlight_2_title = document.getElementById('bio-h2-title-input').value.trim();
+    const highlight_2_desc = document.getElementById('bio-h2-desc-input').value.trim();
+
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Guardando...</span> <i data-lucide="loader-2" class="animate-spin"></i>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    const updatedProfile = {
+      id: 'main_profile',
+      about_subtitle,
+      about_text_1,
+      about_text_2,
+      highlight_1_title,
+      highlight_1_desc,
+      highlight_2_title,
+      highlight_2_desc
+    };
+
+    try {
+      let success = false;
+      if (supabaseClient) {
+        const { error } = await supabaseClient
+          .from('perfil')
+          .upsert([updatedProfile]);
+        if (error) throw error;
+        success = true;
+      } else {
+        localStorage.setItem('nelva_profile', JSON.stringify(updatedProfile));
+        success = true;
+      }
+
+      if (success) {
+        modal.style.display = 'none';
+        await renderProfile();
+      }
+    } catch (err) {
+      alert("Error al guardar biografía: " + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    }
+  });
+}
+
+// ==========================================================================
+// 9. AWARDS / ACHIEVEMENTS DATABASE READS, RENDERING & WRITES
+// ==========================================================================
+
+async function getAwards() {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('reconocimientos')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        return data.map(normalizeAwardRecord);
+      }
+      return DEFAULT_AWARDS;
+    } catch (e) {
+      console.warn("Supabase awards fetch failed. Falling back to local data.", e);
+    }
+  }
+
+  try {
+    const localData = localStorage.getItem('nelva_awards');
+    if (localData) {
+      const parsed = JSON.parse(localData);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(normalizeAwardRecord);
+    }
+  } catch (err) {}
+
+  return inMemoryAwards.map(normalizeAwardRecord);
+}
+
+async function renderAwards() {
+  const grid = document.getElementById('awards-grid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  let awards = [];
+  try {
+    awards = await getAwards();
+  } catch (e) {
+    awards = DEFAULT_AWARDS;
+  }
+
+  if (isAdminMode) {
+    const addCard = document.createElement('div');
+    addCard.className = 'gallery-item add-project-card';
+    addCard.id = 'add-award-btn';
+    addCard.style.display = 'flex';
+    addCard.style.cursor = 'pointer';
+    addCard.style.border = '2px dashed rgba(255, 255, 255, 0.1)';
+    addCard.style.background = 'transparent';
+    addCard.style.borderRadius = 'var(--radius-md)';
+    addCard.style.minHeight = '150px';
+    addCard.innerHTML = `
+      <div class="add-project-content" style="margin: auto;">
+        <div class="add-icon-box">
+          <i data-lucide="plus"></i>
+        </div>
+        <span class="add-project-text" style="font-size:0.9rem;">Agregar Logro</span>
+      </div>
+    `;
+    grid.appendChild(addCard);
+    addCard.addEventListener('click', () => openAwardModal());
+  }
+
+  awards.forEach(award => {
+    try {
+      const card = document.createElement('div');
+      card.className = 'gallery-item';
+      
+      let adminActions = '';
+      if (isAdminMode) {
+        adminActions = `
+          <div class="project-admin-actions" style="opacity: 1; pointer-events: auto; transform: translateY(0); z-index: 10;">
+            <button class="proj-admin-btn award-btn-edit" data-id="${award.id}" title="Editar Logro" style="padding: 6px; margin-right: 4px;">
+              <i data-lucide="pencil" style="width:12px; height:12px;"></i>
+            </button>
+            <button class="proj-admin-btn award-btn-delete" data-id="${award.id}" title="Eliminar Logro" style="padding: 6px;">
+              <i data-lucide="trash-2" style="width:12px; height:12px;"></i>
+            </button>
+          </div>
+        `;
+      }
+
+      card.innerHTML = `
+        ${adminActions}
+        <img src="${award.image}" alt="${award.title}" class="gallery-img" loading="lazy">
+        <div class="gallery-overlay">
+          <div class="gallery-overlay-content">
+            <span class="award-tag">${award.tag}</span>
+            <h4 class="award-title">${award.title}</h4>
+            <p class="award-desc">${award.description}</p>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    } catch (err) {
+      console.error("Error creating award card", award, err);
+    }
+  });
+
+  if (typeof lucide !== 'undefined') {
+    try { lucide.createIcons(); } catch (e) {}
+  }
+
+  attachAwardAdminListeners();
+}
+
+function attachAwardAdminListeners() {
+  const editButtons = document.querySelectorAll('.award-btn-edit');
+  const deleteButtons = document.querySelectorAll('.award-btn-delete');
+
+  editButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openAwardModal(btn.getAttribute('data-id'));
+    });
+  });
+
+  deleteButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteAward(btn.getAttribute('data-id'));
+    });
+  });
+}
+
+async function openAwardModal(id = null) {
+  const modal = document.getElementById('award-modal');
+  const modalTitle = document.getElementById('award-modal-title');
+  const closeBtn = document.getElementById('close-award-modal');
+  const previewContainer = document.getElementById('award-image-preview-container');
+  const fileInput = document.getElementById('award-image-file');
+
+  if (!modal) return;
+
+  // reset form
+  document.getElementById('award-form').reset();
+  if (previewContainer) previewContainer.style.display = 'none';
+  if (fileInput) fileInput.value = '';
+  document.getElementById('award-image').value = '';
+  document.getElementById('award-id').value = '';
+
+  if (id) {
+    modalTitle.textContent = 'Editar Logro';
+    const awards = await getAwards();
+    const award = awards.find(a => a.id === id);
+    if (award) {
+      document.getElementById('award-id').value = award.id || '';
+      document.getElementById('award-title-input').value = award.title || '';
+      document.getElementById('award-tag-input').value = award.tag || '';
+      document.getElementById('award-desc-input').value = award.description || '';
+      document.getElementById('award-image').value = award.image || '';
+
+      if (award.image && previewContainer) {
+        const previewImg = document.getElementById('award-image-preview');
+        if (previewImg) {
+          previewImg.src = award.image;
+          previewContainer.style.display = 'block';
+        }
+      }
+    }
+  } else {
+    modalTitle.textContent = 'Agregar Logro';
+  }
+
+  modal.style.display = 'flex';
+  const closeModal = () => { modal.style.display = 'none'; };
+  if (closeBtn) closeBtn.onclick = closeModal;
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+}
+
+function initAwardForm() {
+  const form = document.getElementById('award-form');
+  const modal = document.getElementById('award-modal');
+  const submitBtn = document.getElementById('btn-save-award');
+
+  if (!form || !modal || !submitBtn) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const id = document.getElementById('award-id').value;
+    const title = document.getElementById('award-title-input').value.trim();
+    const tag = document.getElementById('award-tag-input').value.trim();
+    const description = document.getElementById('award-desc-input').value.trim();
+
+    const fileInput = document.getElementById('award-image-file');
+    let imageUrl = document.getElementById('award-image').value;
+
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Guardando...</span> <i data-lucide="loader-2" class="animate-spin"></i>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    try {
+      if (fileInput && fileInput.files[0]) {
+        imageUrl = await uploadFileToStorage(fileInput.files[0], 'awards');
+      }
+
+      if (!imageUrl || imageUrl === 'PENDING_FILE_UPLOAD') {
+        throw new Error("Por favor, selecciona una imagen para el logro.");
+      }
+
+      let success = false;
+
+      if (supabaseClient) {
+        if (id) {
+          const { error } = await supabaseClient
+            .from('reconocimientos')
+            .update({ title, tag, description, image: imageUrl })
+            .eq('id', id);
+          if (error) throw error;
+        } else {
+          const newAward = {
+            id: 'award-' + Date.now(),
+            title,
+            tag,
+            description,
+            image: imageUrl
+          };
+          const { error } = await supabaseClient
+            .from('reconocimientos')
+            .insert([newAward]);
+          if (error) throw error;
+        }
+        success = true;
+      } else {
+        let awards = await getAwards();
+        if (id) {
+          awards = awards.map(a => {
+            if (a.id === id) {
+              return { id, title, tag, description, image: imageUrl };
+            }
+            return a;
+          });
+        } else {
+          const newAward = {
+            id: 'award-' + Date.now(),
+            title,
+            tag,
+            description,
+            image: imageUrl
+          };
+          awards.push(newAward);
+        }
+        localStorage.setItem('nelva_awards', JSON.stringify(awards));
+        success = true;
+      }
+
+      if (success) {
+        modal.style.display = 'none';
+        await renderAwards();
+      }
+    } catch (err) {
+      alert("Error al guardar logro: " + err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    }
+  });
+}
+
+async function deleteAward(id) {
+  if (confirm('¿Estás seguro de que deseas eliminar este logro?')) {
+    let success = false;
+
+    if (supabaseClient) {
+      try {
+        const { error } = await supabaseClient
+          .from('reconocimientos')
+          .delete()
+          .eq('id', id);
+        if (error) throw error;
+        success = true;
+      } catch (err) {
+        alert('Error al borrar de Supabase: ' + err.message);
+      }
+    } else {
+      try {
+        let awards = await getAwards();
+        awards = awards.filter(a => a.id !== id);
+        localStorage.setItem('nelva_awards', JSON.stringify(awards));
+        success = true;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    if (success) {
+      await renderAwards();
+    }
+  }
+}
 
 // ==========================================================================
 // 10. BASE SITE FEATURES (MOBILE NAV, SCROLL EFFECTS, FORM MOCKS)

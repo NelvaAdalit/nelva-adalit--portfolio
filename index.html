@@ -202,91 +202,16 @@
 
         <div class="about-grid">
           <!-- Left Column: Biography -->
-          <div class="about-text scroll-reveal">
-            <h3 class="about-subtitle">Disciplina, Resiliencia y Enfoque Técnico</h3>
-            <p class="about-paragraph">
-              Mi trayectoria profesional está guiada por la firme convicción de que los mejores resultados técnicos nacen de la constancia y la organización rigurosa. A lo largo de mi formación, he consolidado habilidades duras en el desarrollo frontend y el análisis computacional.
-            </p>
-            
-            <div class="highlight-box">
-              <div class="highlight-icon">
-                <i data-lucide="shield-check"></i>
-              </div>
-              <div class="highlight-info">
-                <h4>Servicio Militar de Honor</h4>
-                <p>Mi paso por el servicio militar me enseñó la importancia del trabajo en equipo coordinado, la adaptabilidad bajo alta presión laboral y el cumplimiento estricto de directrices con excelencia.</p>
-              </div>
-            </div>
-
-            <div class="highlight-box">
-              <div class="highlight-icon">
-                <i data-lucide="languages"></i>
-              </div>
-              <div class="highlight-info">
-                <h4>Competencia Global en Inglés</h4>
-                <p>He completado estudios avanzados en el idioma inglés, lo que me capacita para comprender documentación técnica de alto nivel, coordinar con equipos multiculturales y desempeñarme internacionalmente con soltura (Nivel C1/B2).</p>
-              </div>
-            </div>
-
-            <p class="about-paragraph">
-              Busco integrar mis conocimientos estructurados de Bizagi/UML con la velocidad de desarrollo de frameworks modernos de JavaScript y la automatización inteligente por medio de IA.
-            </p>
+          <div class="about-text scroll-reveal" id="bio-container" style="position: relative;">
+            <!-- Carga dinámica -->
           </div>
 
           <!-- Right Column: Awards Grid Gallery -->
           <div class="about-gallery scroll-reveal">
             <h3 class="about-subtitle gallery-title">Reconocimientos y Logros</h3>
             
-            <div class="gallery-grid">
-              
-              <!-- Award 1 -->
-              <div class="gallery-item">
-                <img src="/images/award-1.jpg" alt="Primer Lugar Hackathon" class="gallery-img">
-                <div class="gallery-overlay">
-                  <div class="gallery-overlay-content">
-                    <span class="award-tag">Primer Lugar</span>
-                    <h4 class="award-title">Hackathon de Innovación</h4>
-                    <p class="award-desc">Solución IA aplicada a la sustentabilidad regional.</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Award 2 -->
-              <div class="gallery-item">
-                <img src="/images/award-2.jpg" alt="Excelencia Académica" class="gallery-img">
-                <div class="gallery-overlay">
-                  <div class="gallery-overlay-content">
-                    <span class="award-tag">Académico</span>
-                    <h4 class="award-title">Excelencia Universitaria</h4>
-                    <p class="award-desc">Reconocimiento al promedio sobresaliente.</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Award 3 -->
-              <div class="gallery-item">
-                <img src="/images/award-3.jpg" alt="Servicio Militar" class="gallery-img">
-                <div class="gallery-overlay">
-                  <div class="gallery-overlay-content">
-                    <span class="award-tag">Honorífico</span>
-                    <h4 class="award-title">Disciplina Militar</h4>
-                    <p class="award-desc">Mención al valor y cumplimiento ejemplar.</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Award 4 -->
-              <div class="gallery-item">
-                <img src="/images/award-4.jpg" alt="Estudios de Inglés" class="gallery-img">
-                <div class="gallery-overlay">
-                  <div class="gallery-overlay-content">
-                    <span class="award-tag">Idiomas</span>
-                    <h4 class="award-title">Certificación C1 Advanced</h4>
-                    <p class="award-desc">Nivel lingüístico superior avalado internacionalmente.</p>
-                  </div>
-                </div>
-              </div>
-
+            <div class="gallery-grid" id="awards-grid">
+              <!-- Carga dinámica -->
             </div>
           </div>
         </div>
@@ -479,6 +404,85 @@
           </div>
         </div>
         <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-save-cert">Guardar Certificación</button>
+      </form>
+    </div>
+  <!-- Modal Editar Biografía -->
+  <div class="modal-overlay" id="bio-modal" style="display: none;">
+    <div class="modal-content glassmorphic-modal">
+      <div class="modal-header">
+        <h3>Editar Biografía</h3>
+        <button class="modal-close-btn" id="close-bio-modal" aria-label="Cerrar modal">&times;</button>
+      </div>
+      <form id="bio-form">
+        <div class="form-group">
+          <label for="bio-subtitle-input">Subtítulo / Lema</label>
+          <input type="text" id="bio-subtitle-input" name="about_subtitle" required>
+        </div>
+        <div class="form-group">
+          <label for="bio-text1-input">Párrafo 1</label>
+          <textarea id="bio-text1-input" name="about_text_1" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="bio-text2-input">Párrafo 2</label>
+          <textarea id="bio-text2-input" name="about_text_2" rows="3" required></textarea>
+        </div>
+        
+        <h4 style="margin: 20px 0 10px; color: var(--color-accent); font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Destacado 1</h4>
+        <div class="form-group">
+          <label for="bio-h1-title-input">Título Destacado 1</label>
+          <input type="text" id="bio-h1-title-input" name="highlight_1_title" required>
+        </div>
+        <div class="form-group">
+          <label for="bio-h1-desc-input">Descripción Destacado 1</label>
+          <textarea id="bio-h1-desc-input" name="highlight_1_desc" rows="2" required></textarea>
+        </div>
+
+        <h4 style="margin: 20px 0 10px; color: var(--color-accent); font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">Destacado 2</h4>
+        <div class="form-group">
+          <label for="bio-h2-title-input">Título Destacado 2</label>
+          <input type="text" id="bio-h2-title-input" name="highlight_2_title" required>
+        </div>
+        <div class="form-group">
+          <label for="bio-h2-desc-input">Descripción Destacado 2</label>
+          <textarea id="bio-h2-desc-input" name="highlight_2_desc" rows="2" required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-save-bio">Guardar Biografía</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal CRUD Logros/Reconocimientos -->
+  <div class="modal-overlay" id="award-modal" style="display: none;">
+    <div class="modal-content glassmorphic-modal">
+      <div class="modal-header">
+        <h3 id="award-modal-title">Agregar Logro</h3>
+        <button class="modal-close-btn" id="close-award-modal" aria-label="Cerrar modal">&times;</button>
+      </div>
+      <form id="award-form">
+        <input type="hidden" id="award-id" name="id">
+        <div class="form-group">
+          <label for="award-title-input">Título del Logro</label>
+          <input type="text" id="award-title-input" name="title" placeholder="Ej. Primer Lugar en Hackathon" required>
+        </div>
+        <div class="form-group">
+          <label for="award-tag-input">Etiqueta / Categoría</label>
+          <input type="text" id="award-tag-input" name="tag" placeholder="Ej. Primer Lugar" required>
+        </div>
+        <div class="form-group">
+          <label for="award-desc-input">Breve Descripción</label>
+          <textarea id="award-desc-input" name="description" rows="2" placeholder="Detalla de qué se trata el logro..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="award-image-file">Imagen / Captura del Logro (Cargar archivo)</label>
+          <input type="file" id="award-image-file" accept="image/*">
+          <input type="hidden" id="award-image" name="image">
+          <div id="award-image-preview-container" style="display:none; margin-top:8px;">
+            <span style="font-size:0.75rem; color:var(--text-muted);">Vista previa:</span>
+            <img id="award-image-preview" src="" style="max-height:80px; display:block; border-radius:var(--radius-sm); margin-top:4px;">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-save-award">Guardar Logro</button>
       </form>
     </div>
   </div>
