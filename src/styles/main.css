@@ -1165,6 +1165,29 @@ button {
   white-space: nowrap;
 }
 
+/* Responsiveness for Certificate Detail Modal */
+@media (max-width: 768px) {
+  .cert-detail-container {
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+  
+  .cert-detail-content {
+    grid-template-columns: 1fr !important;
+    min-height: auto;
+  }
+  
+  .cert-detail-image-wrapper {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 20px;
+  }
+  
+  .cert-detail-details {
+    padding: 24px;
+  }
+}
+
 .lightbox-footer-data .cert-date {
   font-family: var(--font-heading);
   color: var(--text-muted);
