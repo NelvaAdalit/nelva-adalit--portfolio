@@ -612,11 +612,7 @@ async function renderCertifications() {
           <p class="project-desc" style="color:var(--text-secondary); margin-bottom:6px;"><strong>Emisor:</strong> ${issuer}</p>
           <p class="project-desc">${description}</p>
           
-          <div class="project-tech-tags" style="margin-top:10px;">
-            <span class="tech-tag" title="ID de Credencial">
-              <i data-lucide="hash" class="tech-icon"></i> ${credentialId || 'Sin ID'}
-            </span>
-          </div>
+
           
           <div class="project-links">
             <a href="${image}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-code">
@@ -1127,7 +1123,8 @@ function initCertificateForm() {
     const issuer = document.getElementById('cert-issuer-input').value.trim();
     const category = document.getElementById('cert-category-input').value.trim();
     const description = document.getElementById('cert-desc-input').value.trim();
-    const credentialId = document.getElementById('cert-credential-input').value.trim();
+    const credIdEl = document.getElementById('cert-credential-input');
+    const credentialId = credIdEl ? credIdEl.value.trim() : '';
     const verifyLink = document.getElementById('cert-verify-input').value.trim();
 
     const fileInput = document.getElementById('cert-image-file');
