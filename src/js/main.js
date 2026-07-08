@@ -939,6 +939,8 @@ function initAdminModeToggle() {
       updateAdminUI(isAdminMode);
       await renderProjects();
       await renderCertifications();
+      await renderProfile();
+      await renderAwards();
       return;
     }
 
@@ -952,6 +954,8 @@ function initAdminModeToggle() {
           updateAdminUI(false);
           await renderProjects();
           await renderCertifications();
+          await renderProfile();
+          await renderAwards();
         } catch (e) {
           alert('Error al cerrar sesión: ' + e.message);
         }
@@ -1026,6 +1030,8 @@ function initAuthForm() {
 
       await renderProjects();
       await renderCertifications();
+      await renderProfile();
+      await renderAwards();
     } catch (err) {
       if (feedback) {
         feedback.textContent = `Error: ${err.message || 'Credenciales incorrectas'}`;
