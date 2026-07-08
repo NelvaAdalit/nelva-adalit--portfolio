@@ -55,7 +55,7 @@
 
 
         <!-- Admin Toggle Switch -->
-        <button class="btn btn-sm btn-outline btn-admin-toggle" id="admin-toggle" onclick="alert('¡El botón responde al clic!'); if(window.handleAdminToggleClick) { window.handleAdminToggleClick(); } else { const modal = document.getElementById('login-modal'); if(modal) modal.style.display='flex'; }">
+        <button class="btn btn-sm btn-outline btn-admin-toggle" id="admin-toggle" onclick="if(window.handleAdminToggleClick) { window.handleAdminToggleClick(); } else { const modal = document.getElementById('login-modal'); if(modal) modal.style.display='flex'; }">
           <i data-lucide="lock"></i> <span id="admin-toggle-text">Modo Editor</span>
         </button>
         

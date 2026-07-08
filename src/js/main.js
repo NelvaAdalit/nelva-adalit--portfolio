@@ -410,15 +410,23 @@ function updateAdminUI(loggedIn) {
   if (loggedIn) {
     toggleBtn.classList.add('active');
     if (toggleText) toggleText.textContent = 'Salir Editor';
-    const icon = toggleBtn.querySelector('i');
-    if (icon) icon.setAttribute('data-lucide', 'lock-open');
+    const oldIcon = toggleBtn.querySelector('i') || toggleBtn.querySelector('svg');
+    if (oldIcon) {
+      const newIcon = document.createElement('i');
+      newIcon.setAttribute('data-lucide', 'lock-open');
+      oldIcon.parentNode.replaceChild(newIcon, oldIcon);
+    }
     if (projGrid) projGrid.classList.add('admin-mode-active');
     if (certGrid) certGrid.classList.add('admin-mode-active');
   } else {
     toggleBtn.classList.remove('active');
     if (toggleText) toggleText.textContent = 'Modo Editor';
-    const icon = toggleBtn.querySelector('i');
-    if (icon) icon.setAttribute('data-lucide', 'lock');
+    const oldIcon = toggleBtn.querySelector('i') || toggleBtn.querySelector('svg');
+    if (oldIcon) {
+      const newIcon = document.createElement('i');
+      newIcon.setAttribute('data-lucide', 'lock');
+      oldIcon.parentNode.replaceChild(newIcon, oldIcon);
+    }
     if (projGrid) projGrid.classList.remove('admin-mode-active');
     if (certGrid) certGrid.classList.remove('admin-mode-active');
   }
@@ -979,18 +987,22 @@ function initAuthForm() {
       feedback.className = 'form-feedback';
     }
 
-    if (!supabaseClient) {
-      if (password === fallbackAdminPassword) {
-        isAdminMode = true;
-        updateAdminUI(true);
-        loginModal.style.display = 'none';
-        form.reset();
+    // Acceso con contraseña de respaldo local, incluso si Supabase está activo
+    if (password === fallbackAdminPassword) {
+      isAdminMode = true;
+      updateAdminUI(true);
+      loginModal.style.display = 'none';
+      form.reset();
 
-        await renderProjects();
-        await renderCertifications();
-        await renderProfile();
-        await renderAwards();
-      } else if (feedback) {
+      await renderProjects();
+      await renderCertifications();
+      await renderProfile();
+      await renderAwards();
+      return;
+    }
+
+    if (!supabaseClient) {
+      if (feedback) {
         feedback.textContent = 'Contraseña incorrecta.';
         feedback.classList.add('error');
         feedback.style.display = 'block';
