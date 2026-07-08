@@ -570,6 +570,24 @@
       });
       
       logToScreen('Consola de depuración activa.');
+
+      // Monitorización del modal de login
+      setInterval(() => {
+        const modal = document.getElementById('login-modal');
+        if (modal) {
+          const style = window.getComputedStyle(modal);
+          const rect = modal.getBoundingClientRect();
+          if (style.display !== 'none') {
+            logToScreen(`[Modal] display:${style.display}, opacity:${style.opacity}, zIndex:${style.zIndex}, pos:${style.position}, dim:${Math.round(rect.width)}x${Math.round(rect.height)} en (${Math.round(rect.left)},${Math.round(rect.top)}), vis:${style.visibility}`, '#ffff00');
+            const content = modal.querySelector('.modal-content');
+            if (content) {
+              const cStyle = window.getComputedStyle(content);
+              const cRect = content.getBoundingClientRect();
+              logToScreen(`[Content] display:${cStyle.display}, dim:${Math.round(cRect.width)}x${Math.round(cRect.height)} en (${Math.round(cRect.left)},${Math.round(cRect.top)}), vis:${cStyle.visibility}`, '#ffff00');
+            }
+          }
+        }
+      }, 2000);
     })();
   </script>
 </body>
