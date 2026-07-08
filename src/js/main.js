@@ -909,21 +909,13 @@ function initAdminModeToggle() {
 
   // Registrar el manejador de forma global para el onclick inline de respaldo
   window.handleAdminToggleClick = async () => {
-    if (!supabaseClient) {
-      isAdminMode = !isAdminMode;
-      updateAdminUI(isAdminMode);
-      await renderProjects();
-      await renderCertifications();
-      await renderProfile();
-      await renderAwards();
-      return;
-    }
-
     if (isAdminMode) {
       if (confirm('¿Deseas cerrar sesión de Administrador?')) {
         try {
-          const { error } = await supabaseClient.auth.signOut();
-          if (error) throw error;
+          if (supabaseClient) {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) throw error;
+          }
           
           isAdminMode = false;
           updateAdminUI(false);
