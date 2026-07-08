@@ -55,7 +55,7 @@
 
 
         <!-- Admin Toggle Switch -->
-        <button class="btn btn-sm btn-outline btn-admin-toggle" id="admin-toggle" onclick="alert('Click en el botón detectado (desde HTML)'); console.log('Click en el botón detectado (desde HTML)'); if(window.handleAdminToggleClick) { window.handleAdminToggleClick(); } else { const modal = document.getElementById('login-modal'); if(modal) modal.style.display='flex'; }">
+        <button class="btn btn-sm btn-outline btn-admin-toggle" id="admin-toggle" onclick="if(window.handleAdminToggleClick) { window.handleAdminToggleClick(); } else { const modal = document.getElementById('login-modal'); if(modal) modal.style.display='flex'; }">
           <i data-lucide="lock"></i> <span id="admin-toggle-text">Modo Editor</span>
         </button>
         
@@ -490,8 +490,8 @@
 
 
   <!-- Modal de Iniciar Sesión de Administrador -->
-  <div class="modal-overlay" id="login-modal" style="display: none;">
-    <div class="modal-content glassmorphic-modal">
+  <div class="modal-overlay" id="login-modal" style="display: none; opacity: 1 !important; z-index: 99999 !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(10, 15, 25, 0.95) !important; align-items: center !important; justify-content: center !important;">
+    <div class="modal-content glassmorphic-modal" style="transform: scale(1) !important; opacity: 1 !important; background: #0f172a !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;">
       <div class="modal-header">
         <h3>Acceso Administrador</h3>
         <button class="modal-close-btn" id="close-login-modal" aria-label="Cerrar modal">&times;</button>

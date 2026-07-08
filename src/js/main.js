@@ -909,9 +909,7 @@ function initAdminModeToggle() {
 
   // Registrar el manejador de forma global para el onclick inline de respaldo
   window.handleAdminToggleClick = async () => {
-    console.log("window.handleAdminToggleClick invocado");
     if (!supabaseClient) {
-      console.log("Supabase no inicializado. Alternando modo administrador local.");
       isAdminMode = !isAdminMode;
       updateAdminUI(isAdminMode);
       await renderProjects();
@@ -938,30 +936,20 @@ function initAdminModeToggle() {
         }
       }
     } else {
-      console.log("Abriendo modal de login");
       const loginModal = document.getElementById('login-modal');
       if (loginModal) {
         loginModal.style.display = 'flex';
         const emailInput = document.getElementById('login-email');
         if (emailInput) emailInput.focus();
-      } else {
-        console.error("No se encontró el elemento login-modal");
       }
     }
   };
 
-  if (!toggleBtn) {
-    console.error("No se encontró el botón admin-toggle al inicializar");
-    return;
-  }
+  if (!toggleBtn) return;
 
-  console.log("Inicializando admin-toggle, removiendo onclick inline y agregando event listener");
   // Si el script cargó con éxito, limpiamos el onclick inline de respaldo para evitar ejecuciones dobles
   toggleBtn.removeAttribute('onclick');
-  toggleBtn.addEventListener('click', () => {
-    console.log("Evento click disparado en el botón admin-toggle (vía event listener)");
-    window.handleAdminToggleClick();
-  });
+  toggleBtn.addEventListener('click', window.handleAdminToggleClick);
 
   const closeBtn = document.getElementById('close-login-modal');
   if (closeBtn) {
