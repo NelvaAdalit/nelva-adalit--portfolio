@@ -409,22 +409,22 @@ function updateAdminUI(loggedIn) {
 
   if (loggedIn) {
     toggleBtn.classList.add('active');
-    if (toggleText) toggleText.textContent = 'Salir Editor';
+    if (toggleText) toggleText.textContent = 'Cerrar Sesión';
     const oldIcon = toggleBtn.querySelector('i') || toggleBtn.querySelector('svg');
     if (oldIcon) {
       const newIcon = document.createElement('i');
-      newIcon.setAttribute('data-lucide', 'lock-open');
+      newIcon.setAttribute('data-lucide', 'log-out');
       oldIcon.parentNode.replaceChild(newIcon, oldIcon);
     }
     if (projGrid) projGrid.classList.add('admin-mode-active');
     if (certGrid) certGrid.classList.add('admin-mode-active');
   } else {
     toggleBtn.classList.remove('active');
-    if (toggleText) toggleText.textContent = 'Modo Editor';
+    if (toggleText) toggleText.textContent = 'Iniciar Sesión';
     const oldIcon = toggleBtn.querySelector('i') || toggleBtn.querySelector('svg');
     if (oldIcon) {
       const newIcon = document.createElement('i');
-      newIcon.setAttribute('data-lucide', 'lock');
+      newIcon.setAttribute('data-lucide', 'log-in');
       oldIcon.parentNode.replaceChild(newIcon, oldIcon);
     }
     if (projGrid) projGrid.classList.remove('admin-mode-active');
