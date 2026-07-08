@@ -55,7 +55,7 @@
 
 
         <!-- Admin Toggle Switch -->
-        <button class="btn btn-sm btn-outline btn-admin-toggle" id="admin-toggle" onclick="if(window.handleAdminToggleClick) { window.handleAdminToggleClick(); } else { const modal = document.getElementById('login-modal'); if(modal) modal.style.display='flex'; }">
+        <button class="btn btn-sm btn-outline btn-admin-toggle" id="admin-toggle" onclick="console.log('Click en admin-toggle'); try { if(window.handleAdminToggleClick) { window.handleAdminToggleClick(); } else { const modal = document.getElementById('login-modal'); if(modal) { modal.style.setProperty('display', 'flex', 'important'); } else { alert('Modal login-modal no encontrado en el DOM'); } } } catch(e) { alert('Error en click inline: ' + e.message); }">
           <i data-lucide="lock"></i> <span id="admin-toggle-text">Modo Editor</span>
         </button>
         
@@ -524,6 +524,53 @@
         lucide.createIcons();
       }
     });
+  </script>
+
+  <!-- Floating Debug Console -->
+  <div id="debug-console" style="position: fixed; bottom: 10px; right: 10px; width: 320px; max-height: 200px; background: rgba(10, 15, 25, 0.95); color: #00ff66; font-family: monospace; font-size: 11px; padding: 12px; border-radius: 8px; z-index: 100000; overflow-y: auto; border: 1px solid rgba(0, 255, 102, 0.3); box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none;">
+    <div style="border-bottom: 1px solid rgba(0, 255, 102, 0.2); padding-bottom: 6px; margin-bottom: 6px; font-weight: bold; display: flex; justify-content: space-between;">
+      <span>Debug Terminal</span>
+      <span style="cursor: pointer; text-decoration: underline;" onclick="document.getElementById('debug-console').style.display='none'">[Cerrar]</span>
+    </div>
+    <div id="debug-log-lines"></div>
+  </div>
+  <script>
+    (function() {
+      const debugConsole = document.getElementById('debug-console');
+      const logContainer = document.getElementById('debug-log-lines');
+      
+      // Mostrar consola de depuración si la URL tiene ?debug=true
+      if (location.search.includes('debug=true')) {
+        debugConsole.style.display = 'block';
+      }
+      
+      function logToScreen(msg, color = '#00ff66') {
+        const line = document.createElement('div');
+        line.style.color = color;
+        line.style.marginBottom = '4px';
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        logContainer.appendChild(line);
+        debugConsole.scrollTop = debugConsole.scrollHeight;
+      }
+      
+      const oldLog = console.log;
+      console.log = function(...args) {
+        oldLog.apply(console, args);
+        logToScreen(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), '#00ff66');
+      };
+      
+      const oldError = console.error;
+      console.error = function(...args) {
+        oldError.apply(console, args);
+        logToScreen(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '), '#ff3344');
+      };
+      
+      window.addEventListener('error', function(e) {
+        logToScreen(`Error: ${e.message} en ${e.filename}:${e.lineno}`, '#ff3344');
+      });
+      
+      logToScreen('Consola de depuración activa.');
+    })();
   </script>
 </body>
 </html>

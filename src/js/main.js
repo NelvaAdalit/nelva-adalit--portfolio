@@ -909,31 +909,43 @@ function initAdminModeToggle() {
 
   // Registrar el manejador de forma global para el onclick inline de respaldo
   window.handleAdminToggleClick = async () => {
-    if (isAdminMode) {
-      if (confirm('¿Deseas cerrar sesión de Administrador?')) {
-        try {
-          if (supabaseClient) {
-            const { error } = await supabaseClient.auth.signOut();
-            if (error) throw error;
+    try {
+      console.log('handleAdminToggleClick invocado. isAdminMode:', isAdminMode);
+      if (isAdminMode) {
+        if (confirm('¿Deseas cerrar sesión de Administrador?')) {
+          try {
+            if (supabaseClient) {
+              const { error } = await supabaseClient.auth.signOut();
+              if (error) throw error;
+            }
+            
+            isAdminMode = false;
+            updateAdminUI(false);
+            await renderProjects();
+            await renderCertifications();
+            await renderProfile();
+            await renderAwards();
+          } catch (e) {
+            alert('Error al cerrar sesión: ' + e.message);
           }
-          
-          isAdminMode = false;
-          updateAdminUI(false);
-          await renderProjects();
-          await renderCertifications();
-          await renderProfile();
-          await renderAwards();
-        } catch (e) {
-          alert('Error al cerrar sesión: ' + e.message);
+        }
+      } else {
+        const loginModal = document.getElementById('login-modal');
+        if (loginModal) {
+          console.log('Estableciendo display del modal de login a flex !important');
+          loginModal.style.setProperty('display', 'flex', 'important');
+          const emailInput = document.getElementById('login-email');
+          if (emailInput) {
+            emailInput.focus();
+            console.log('Enfoque establecido en emailInput');
+          }
+        } else {
+          console.error('No se encontró el elemento login-modal');
         }
       }
-    } else {
-      const loginModal = document.getElementById('login-modal');
-      if (loginModal) {
-        loginModal.style.display = 'flex';
-        const emailInput = document.getElementById('login-email');
-        if (emailInput) emailInput.focus();
-      }
+    } catch (err) {
+      alert('Error en handleAdminToggleClick: ' + err.message);
+      console.error(err);
     }
   };
 
