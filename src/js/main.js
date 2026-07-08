@@ -888,40 +888,8 @@ function getTechIcon(tech) {
 // ==========================================================================
 
 async function seedSupabaseDataIfEmpty() {
-  if (!supabaseClient) return;
-  try {
-    const { data: projData } = await supabaseClient.from('proyectos').select('id').limit(1);
-    if (projData && projData.length === 0) {
-      await supabaseClient.from('proyectos').insert(DEFAULT_PROJECTS.map(project => ({
-        id: project.id,
-        title: project.title,
-        category: project.category,
-        image: project.image,
-        description: project.description,
-        techs: project.techs,
-        codelink: project.codeLink,
-        demolink: project.demoLink
-      })));
-      console.log("Seeded default projects to Supabase.");
-    }
-
-    const { data: certData } = await supabaseClient.from('certificaciones').select('id').limit(1);
-    if (certData && certData.length === 0) {
-      await supabaseClient.from('certificaciones').insert(DEFAULT_CERTIFICATIONS.map(certification => ({
-        id: certification.id,
-        title: certification.title,
-        issuer: certification.issuer,
-        category: certification.category,
-        description: certification.description,
-        credentialid: certification.credentialId,
-        verifylink: certification.verifyLink,
-        image: certification.image
-      })));
-      console.log("Seeded default certifications to Supabase.");
-    }
-  } catch (e) {
-    console.error("Error auto-seeding tables", e);
-  }
+  // Desactivado para evitar la inserción de datos de prueba en la base de datos
+  return;
 }
 
 // ==========================================================================
