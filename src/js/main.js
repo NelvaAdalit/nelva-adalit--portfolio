@@ -934,6 +934,22 @@ function initAdminModeToggle() {
         if (loginModal) {
           console.log('Estableciendo display del modal de login a flex !important');
           loginModal.style.setProperty('display', 'flex', 'important');
+          
+          // DIAGNÓSTICO DE ESTILOS EN CONSOLA
+          const style = window.getComputedStyle(loginModal);
+          const rect = loginModal.getBoundingClientRect();
+          console.log('DIAGNÓSTICO MODAL:', {
+            display: style.display,
+            visibility: style.visibility,
+            opacity: style.opacity,
+            zIndex: style.zIndex,
+            position: style.position,
+            width: rect.width,
+            height: rect.height,
+            top: rect.top,
+            left: rect.left
+          });
+
           const emailInput = document.getElementById('login-email');
           if (emailInput) {
             emailInput.focus();
