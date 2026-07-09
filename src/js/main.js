@@ -2070,7 +2070,7 @@ function initContactForm() {
       return;
     }
 
-    const accessKey = import.meta.env.VITE_WEB3FORMS_KEY || 'YOUR_ACCESS_KEY';
+    const accessKey = import.meta.env.VITE_WEB3FORMS_KEY || 'ea4f3341-7fa9-4f5f-b2fc-3407e1a0a4b0';
 
     if (accessKey === 'YOUR_ACCESS_KEY') {
       console.warn("Web3Forms access key is not configured.");
