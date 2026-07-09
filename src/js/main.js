@@ -269,7 +269,8 @@ const init = () => {
     { name: "File Upload Previews", fn: initFileUploadPreviews },
     { name: "Scroll Effects", fn: initScrollEffects },
     { name: "Scroll Reveal", fn: initScrollReveal },
-    { name: "Contact Form", fn: initContactForm }
+    { name: "Contact Form", fn: initContactForm },
+    { name: "CV Dropdown", fn: initCvDropdown }
   ];
 
   steps.forEach(step => {
@@ -2123,6 +2124,27 @@ function initContactForm() {
           feedback.style.display = 'none';
         }, 7000);
       }
+    }
+  });
+}
+
+function initCvDropdown() {
+  const cvBtn = document.getElementById('btn-cv-dropdown');
+  const cvMenu = document.querySelector('.cv-dropdown-menu');
+
+  if (!cvBtn || !cvMenu) return;
+
+  cvBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isExpanded = cvBtn.getAttribute('aria-expanded') === 'true';
+    cvBtn.setAttribute('aria-expanded', !isExpanded);
+    cvMenu.classList.toggle('show');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!cvBtn.contains(e.target) && !cvMenu.contains(e.target)) {
+      cvBtn.setAttribute('aria-expanded', 'false');
+      cvMenu.classList.remove('show');
     }
   });
 }
