@@ -44,26 +44,6 @@ const DEFAULT_PROJECTS = [
     techs: "OpenAI, Node.js, Supabase",
     codeLink: "https://github.com",
     demoLink: "https://vercel.app"
-  },
-  {
-    id: "seed-proc-1",
-    title: "Automatización de Selección",
-    category: "process",
-    image: "/images/project-proc-1.jpg",
-    description: "Orquestación completa y optimización del ciclo de contratación de personal en Bizagi Suite bajo el estándar internacional BPMN 2.0.",
-    techs: "Bizagi, UML, BPMN 2.0",
-    codeLink: "https://github.com",
-    demoLink: "https://bizagi.com"
-  },
-  {
-    id: "seed-proc-2",
-    title: "Arquitectura de Microservicios",
-    category: "process",
-    image: "/images/project-proc-2.jpg",
-    description: "Modelado integral en UML detallando casos de uso, secuencia, clases y topología de despliegue para una fintech transaccional.",
-    techs: "UML, Ent. Architect, Secuencia",
-    codeLink: "https://github.com",
-    demoLink: "https://lucid.app"
   }
 ];
 
@@ -88,16 +68,6 @@ const DEFAULT_CERTIFICATIONS = [
     credentialId: "ID: DLAI-77224",
     verifyLink: "https://coursera.org",
     image: "/images/award-2.jpg"
-  },
-  {
-    id: "seed-cert-3",
-    title: "BPMN 2.0 Process Modeling",
-    issuer: "Bizagi Corporate",
-    category: "Bizagi & UML",
-    description: "Certificación oficial en el diseño, modelado, simulación y automatización de flujos de trabajo corporativos complejos bajo el estándar BPMN 2.0 y diagramación de casos de uso y despliegue estructurados en UML.",
-    credentialId: "ID: BZG-33990",
-    verifyLink: "https://bizagi.com",
-    image: "/images/award-3.jpg"
   }
 ];
 
@@ -1453,7 +1423,7 @@ async function getProfile() {
     id: 'main_profile',
     about_subtitle: 'Disciplina, Resiliencia y Enfoque Técnico',
     about_text_1: 'Mi trayectoria profesional está guiada por la firme convicción de que los mejores resultados técnicos nacen de la constancia y la organización rigurosa. A lo largo de mi formación, he consolidado habilidades duras en el desarrollo frontend y el análisis computacional.',
-    about_text_2: 'Busco integrar mis conocimientos estructurados de Bizagi/UML con la velocidad de desarrollo de frameworks modernos de JavaScript y la automatización inteligente por medio de IA.',
+    about_text_2: 'Busco integrar la velocidad de desarrollo de frameworks modernos de JavaScript con la automatización inteligente y el análisis predictivo por medio de Inteligencia Artificial.',
     highlight_1_title: 'Servicio Militar de Honor',
     highlight_1_desc: 'Mi paso por el servicio militar me enseñó la importancia del trabajo en equipo coordinado, la adaptabilidad bajo alta presión laboral y el cumplimiento estricto de directrices con excelencia.',
     highlight_2_title: 'Competencia Global en Inglés',
