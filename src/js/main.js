@@ -2039,7 +2039,7 @@ function initContactForm() {
 
   if (!form || !feedback || !submitBtn) return;
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const originalBtnText = submitBtn.innerHTML;
@@ -2050,24 +2050,55 @@ function initContactForm() {
     feedback.style.display = 'none';
     feedback.className = 'form-feedback';
 
-    setTimeout(() => {
-      const nameEl = document.getElementById('contact-name');
-      const emailEl = document.getElementById('contact-email');
+    const nameEl = document.getElementById('contact-name');
+    const emailEl = document.getElementById('contact-email');
+    const subjectEl = document.getElementById('contact-subject');
+    const messageEl = document.getElementById('contact-message');
+    
+    const name = nameEl ? nameEl.value.trim() : '';
+    const email = emailEl ? emailEl.value.trim() : '';
+    const subject = subjectEl ? subjectEl.value.trim() : '';
+    const message = messageEl ? messageEl.value.trim() : '';
+
+    if (!name || !email || !subject || !message) {
+      feedback.textContent = 'Hubo un error al procesar el formulario. Por favor, revisa todos los campos.';
+      feedback.classList.add('error');
+      feedback.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      return;
+    }
+
+    try {
+      const res = await fetch("https://formsubmit.co/ajax/nelvaadalitmorabarrionuevo@gmail.com", {
+        method: "POST",
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          subject: subject,
+          message: message,
+          _captcha: "false",
+          _subject: `Contacto Portafolio: ${subject}`
+        })
+      });
+
+      if (!res.ok) throw new Error("HTTP error " + res.status);
       
-      const name = nameEl ? nameEl.value.trim() : '';
-      const email = emailEl ? emailEl.value.trim() : '';
-
-      if (name && email) {
-        feedback.textContent = `¡Gracias, ${name}! Tu mensaje ha sido enviado exitosamente. Nos contactaremos al correo: ${email}.`;
-        feedback.classList.add('success');
-        feedback.style.display = 'block';
-        form.reset();
-      } else {
-        feedback.textContent = 'Hubo un error al procesar el formulario. Por favor, revisa todos los campos.';
-        feedback.classList.add('error');
-        feedback.style.display = 'block';
-      }
-
+      feedback.textContent = `¡Gracias, ${name}! Tu mensaje ha sido enviado exitosamente. Nos contactaremos al correo: ${email}.`;
+      feedback.classList.add('success');
+      feedback.style.display = 'block';
+      form.reset();
+    } catch (err) {
+      console.error("FormSubmit sending failed:", err);
+      feedback.textContent = 'Error al enviar el mensaje. Intenta nuevamente más tarde o escríbeme directamente.';
+      feedback.classList.add('error');
+      feedback.style.display = 'block';
+    } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalBtnText;
       if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -2077,6 +2108,6 @@ function initContactForm() {
           feedback.style.display = 'none';
         }, 7000);
       }
-    }, 1500);
+    }
   });
 }
