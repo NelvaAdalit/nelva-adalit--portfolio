@@ -842,6 +842,7 @@ function getCategoryName(cat) {
   switch (cat) {
     case 'web': return 'Desarrollo Web';
     case 'ai': return 'Inteligencia Artificial';
+    case 'design': return 'Diseño & Multimedia';
     case 'process': return 'Bizagi & UML';
     default: return cat || 'Desarrollo';
   }
