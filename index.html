@@ -44,7 +44,6 @@
         <ul class="nav-list">
           <li><a href="#inicio" class="nav-link active" id="link-inicio">Inicio</a></li>
           <li><a href="#proyectos" class="nav-link" id="link-proyectos">Proyectos</a></li>
-          <li><a href="#practicas" class="nav-link" id="link-practicas">Prácticas</a></li>
           <li><a href="#certificaciones" class="nav-link" id="link-certificaciones">Certificaciones</a></li>
           <li><a href="#sobre-mi" class="nav-link" id="link-sobre-mi">Sobre Mí</a></li>
           <li><a href="#contacto" class="nav-link" id="link-contacto">Contacto</a></li>
@@ -132,48 +131,6 @@
       </div>
     </section>
 
-    <!-- Section: Prácticas -->
-    <section id="practicas" class="timeline-section section-padding alternate-bg">
-      <div class="container">
-        <div class="section-header scroll-reveal">
-          <span class="section-tag">Trayectoria</span>
-          <h2 class="section-title">Prácticas y Experiencia</h2>
-          <p class="section-description">
-            Mi experiencia práctica aplicando teoría técnica a entornos y flujos reales de producción.
-          </p>
-        </div>
-
-        <div class="timeline scroll-reveal">
-          
-          <!-- Timeline Item 1 -->
-          <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">Ene 2026 - Presente</div>
-            <div class="timeline-content">
-              <h3>Práctica en Ingeniería de Software & IA</h3>
-              <span class="timeline-organization">Tech Solutions Inc.</span>
-              <p>
-                Desarrollo de interfaces responsivas y consumo de APIs de aprendizaje profundo. Integración de modelos predictivos en dashboards interactivos basados en Vite y frameworks modernos.
-              </p>
-            </div>
-          </div>
-
-          <!-- Timeline Item 2 -->
-          <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-date">Ago 2025 - Dic 2025</div>
-            <div class="timeline-content">
-              <h3>Analista de Procesos y Modelador BPMN</h3>
-              <span class="timeline-organization">Consultores de Operación Alfa</span>
-              <p>
-                Diseño y diagramación de flujos corporativos utilizando Bizagi BPM Suite y estándares UML. Colaboración directa en la reducción de cuellos de botella operativos en un 18%.
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
 
     <!-- Section: Certificaciones -->
     <section id="certificaciones" class="certs-section section-padding">
@@ -406,6 +363,7 @@
         <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-save-cert">Guardar Certificación</button>
       </form>
     </div>
+  </div>
   <!-- Modal Editar Biografía -->
   <div class="modal-overlay" id="bio-modal" style="display: none;">
     <div class="modal-content glassmorphic-modal">
@@ -499,11 +457,11 @@
       <form id="login-form">
         <div class="form-group">
           <label for="login-email">Correo Electrónico</label>
-          <input type="email" id="login-email" placeholder="admin@correo.com" required>
+          <input type="email" id="login-email" placeholder="admin@correo.com" required autocomplete="username">
         </div>
         <div class="form-group">
           <label for="login-password">Contraseña</label>
-          <input type="password" id="login-password" placeholder="••••••••" required>
+          <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
         </div>
         <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-login-submit">Iniciar Sesión</button>
         <div id="login-feedback" class="form-feedback" style="display: none;"></div>
