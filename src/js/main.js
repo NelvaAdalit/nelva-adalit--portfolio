@@ -2033,6 +2033,9 @@ function initScrollReveal() {
 }
 
 function initContactForm() {
+  // Desactivado temporalmente para forzar el envío estándar (HTML POST) y activar el correo de FormSubmit
+  return;
+
   const form = document.getElementById('contact-form');
   const feedback = document.getElementById('form-feedback');
   const submitBtn = document.getElementById('btn-submit-contact');
