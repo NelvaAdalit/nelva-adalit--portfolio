@@ -8,7 +8,7 @@ const DEFAULT_PROJECTS = [
   {
     id: "seed-web-1",
     title: "Portal Académico E-Learning",
-    category: "web",
+    category: "web:featured",
     image: "/images/project-web-1.jpg",
     description: "Plataforma interactiva con autenticación de usuarios, base de datos en tiempo real y paneles dinámicos de administración escolar.",
     techs: "Node.js, Supabase, Vercel",
@@ -28,7 +28,7 @@ const DEFAULT_PROJECTS = [
   {
     id: "seed-ai-1",
     title: "Clasificador de Patologías CNN",
-    category: "ai",
+    category: "ai:featured",
     image: "/images/project-ai-1.jpg",
     description: "Modelo de aprendizaje profundo entrenado con TensorFlow para clasificar radiografías pulmonares con precisión diagnóstica del 94.8%.",
     techs: "Python, TensorFlow, Render",
@@ -530,8 +530,16 @@ async function renderProjects() {
 
   const filteredProjects = projects.filter(proj => {
     if (!proj) return false;
-    const cat = proj.category || 'web';
+    const cat = (proj.category || 'web').split(':')[0];
     return currentFilter === 'all' || cat === currentFilter;
+  });
+
+  filteredProjects.sort((a, b) => {
+    const aFeatured = a.category && a.category.includes(':featured');
+    const bFeatured = b.category && b.category.includes(':featured');
+    if (aFeatured && !bFeatured) return -1;
+    if (!aFeatured && bFeatured) return 1;
+    return 0;
   });
 
   if (isAdminMode) {
@@ -553,8 +561,10 @@ async function renderProjects() {
   filteredProjects.forEach(proj => {
     try {
       const card = document.createElement('article');
-      card.className = 'project-card show';
-      card.setAttribute('data-category', proj.category || 'web');
+      const isFeatured = proj.category && proj.category.includes(':featured');
+      card.className = 'project-card show' + (isFeatured ? ' featured' : '');
+      const baseCat = (proj.category || 'web').split(':')[0];
+      card.setAttribute('data-category', baseCat);
       card.setAttribute('data-id', proj.id);
       
       const title = proj.title || 'Proyecto sin título';
@@ -564,6 +574,7 @@ async function renderProjects() {
       const codeLink = proj.codeLink || '#';
       const demoLink = proj.demoLink || '#';
       const categoryLabel = getCategoryName(proj.category);
+      const starIconHtml = isFeatured ? ' <span class="project-favorite-star" title="Proyecto Destacado"><i data-lucide="star"></i></span>' : '';
 
       card.innerHTML = `
         <div class="project-admin-actions" style="${isAdminMode ? 'opacity:1; pointer-events:auto; transform:translateY(0);' : ''}">
@@ -582,7 +593,7 @@ async function renderProjects() {
         </div>
         
         <div class="project-info">
-          <h3 class="project-title">${title}</h3>
+          <h3 class="project-title">${title}${starIconHtml}</h3>
           ${formatDescriptionToggle(desc)}
           
           <div class="project-tech-tags">
@@ -599,10 +610,10 @@ async function renderProjects() {
           
           <div class="project-links">
             <a href="${codeLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-code">
-              <i data-lucide="${proj.category === 'process' ? 'folder' : 'github'}"></i> ${proj.category === 'process' ? 'Planos' : 'Código'}
+              <i data-lucide="${baseCat === 'process' ? 'folder' : 'github'}"></i> ${baseCat === 'process' ? 'Planos' : 'Código'}
             </a>
             <a href="${demoLink}" target="_blank" rel="noopener noreferrer" class="btn-project-link btn-demo">
-              <i data-lucide="${proj.category === 'process' ? 'eye' : 'external-link'}"></i> ${proj.category === 'process' ? 'Modelado' : 'Demo'}
+              <i data-lucide="${baseCat === 'process' ? 'eye' : 'external-link'}"></i> ${baseCat === 'process' ? 'Modelado' : 'Demo'}
             </a>
           </div>
         </div>
@@ -839,12 +850,13 @@ function getCertIcon(category) {
 }
 
 function getCategoryName(cat) {
-  switch (cat) {
+  const baseCat = cat ? cat.split(':')[0] : 'web';
+  switch (baseCat) {
     case 'web': return 'Desarrollo Web';
     case 'ai': return 'Inteligencia Artificial';
     case 'design': return 'Diseño & Multimedia';
     case 'process': return 'Bizagi & UML';
-    default: return cat || 'Desarrollo';
+    default: return baseCat || 'Desarrollo';
   }
 }
 
@@ -1026,6 +1038,8 @@ async function openProjectModal(id = null) {
   if (!modal || !form || !modalTitle) return;
 
   form.reset();
+  const featuredCheck = document.getElementById('proj-featured');
+  if (featuredCheck) featuredCheck.checked = false;
   if (previewContainer) previewContainer.style.display = 'none';
   
   const idInput = document.getElementById('project-id');
@@ -1047,7 +1061,8 @@ async function openProjectModal(id = null) {
       const demo = document.getElementById('proj-demo');
 
       if (t) t.value = proj.title || '';
-      if (cat) cat.value = proj.category || 'web';
+      if (cat) cat.value = (proj.category || 'web').split(':')[0];
+      if (featuredCheck) featuredCheck.checked = proj.category && proj.category.includes(':featured');
       if (img) img.value = proj.image || '';
       if (desc) desc.value = proj.description || '';
       if (techs) techs.value = proj.techs || '';
@@ -1084,7 +1099,9 @@ function initProjectForm() {
 
     const id = document.getElementById('project-id').value;
     const title = document.getElementById('proj-title').value.trim();
-    const category = document.getElementById('proj-category').value;
+    const baseCategory = document.getElementById('proj-category').value;
+    const isFeatured = document.getElementById('proj-featured') ? document.getElementById('proj-featured').checked : false;
+    const category = isFeatured ? `${baseCategory}:featured` : baseCategory;
     const description = document.getElementById('proj-desc').value.trim();
     const techs = document.getElementById('proj-techs').value.trim();
     const codeLink = document.getElementById('proj-code').value.trim();

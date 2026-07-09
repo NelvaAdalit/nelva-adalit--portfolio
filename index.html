@@ -101,9 +101,6 @@
         <div class="section-header scroll-reveal">
           <span class="section-tag">Portafolio</span>
           <h2 class="section-title">Proyectos Destacados</h2>
-          <p class="section-description">
-            Explora mis trabajos clasificados según su área de desarrollo. Modifica, agrega o elimina proyectos activando el Modo Editor.
-          </p>
         </div>
 
         <!-- Filter Tabs -->
@@ -127,9 +124,9 @@
       <div class="container">
         <div class="section-header scroll-reveal">
           <span class="section-tag">Credenciales</span>
-          <h2 class="section-title">Certificaciones Internacionales</h2>
+          <h2 class="section-title">Certificaciones y Reconocimientos Nacionales e Internacionales</h2>
           <p class="section-description">
-            Haz clic en cualquier tarjeta de certificación para inspeccionar la credencial a detalle a pantalla completa (estilo visor de prendas).
+            Selecciona cualquier certificación para visualizar la credencial oficial a detalle.
           </p>
         </div>
 
@@ -304,6 +301,10 @@
             <label for="proj-demo">Enlace de Demo / Presentación</label>
             <input type="url" id="proj-demo" name="demoLink" placeholder="Ej. https://mi-proyecto.vercel.app" required>
           </div>
+        </div>
+        <div class="form-group checkbox-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+          <input type="checkbox" id="proj-featured" name="featured" style="width: auto; cursor: pointer; transform: scale(1.15);">
+          <label for="proj-featured" style="margin-bottom: 0; cursor: pointer; font-size: 0.9rem; font-weight: 500;">Destacar proyecto (Favorito / Resaltado)</label>
         </div>
         <button type="submit" class="btn btn-primary btn-submit-modal" id="btn-save-project">Guardar Proyecto</button>
       </form>

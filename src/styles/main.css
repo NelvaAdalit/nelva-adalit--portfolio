@@ -648,6 +648,35 @@ button {
   font-family: var(--font-heading);
 }
 
+.project-favorite-star {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.project-favorite-star svg {
+  color: #ffd700;
+  fill: #ffd700;
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
+  animation: star-pulse 2.5s infinite ease-in-out;
+}
+
+@keyframes star-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5)); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 9px rgba(255, 215, 0, 0.9)); }
+}
+
+.project-card.featured {
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+}
+
+.project-card.featured:hover {
+  border-color: rgba(255, 215, 0, 0.45);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.12);
+}
+
 .project-desc {
   color: var(--text-secondary);
   font-size: 0.95rem;
