@@ -2033,9 +2033,6 @@ function initScrollReveal() {
 }
 
 function initContactForm() {
-  // Desactivado temporalmente para forzar el envío estándar (HTML POST) y activar el correo de FormSubmit
-  return;
-
   const form = document.getElementById('contact-form');
   const feedback = document.getElementById('form-feedback');
   const submitBtn = document.getElementById('btn-submit-contact');
@@ -2073,31 +2070,46 @@ function initContactForm() {
       return;
     }
 
+    const accessKey = import.meta.env.VITE_WEB3FORMS_KEY || 'YOUR_ACCESS_KEY';
+
+    if (accessKey === 'YOUR_ACCESS_KEY') {
+      console.warn("Web3Forms access key is not configured.");
+      feedback.textContent = 'El formulario de contacto está en mantenimiento. Por favor, escribe directamente al correo.';
+      feedback.classList.add('error');
+      feedback.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      return;
+    }
+
     try {
-      const res = await fetch("https://formsubmit.co/ajax/nelvaadalitmorabarrionuevo@gmail.com", {
+      const res = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify({
+          access_key: accessKey,
           name: name,
           email: email,
           subject: subject,
           message: message,
-          _captcha: "false",
-          _subject: `Contacto Portafolio: ${subject}`
+          from_name: "Portafolio Nelva Adalit"
         })
       });
 
       if (!res.ok) throw new Error("HTTP error " + res.status);
-      
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || "Submission failed");
+
       feedback.textContent = `¡Gracias, ${name}! Tu mensaje ha sido enviado exitosamente. Nos contactaremos al correo: ${email}.`;
       feedback.classList.add('success');
       feedback.style.display = 'block';
       form.reset();
     } catch (err) {
-      console.error("FormSubmit sending failed:", err);
+      console.error("Web3Forms sending failed:", err);
       feedback.textContent = 'Error al enviar el mensaje. Intenta nuevamente más tarde o escríbeme directamente.';
       feedback.classList.add('error');
       feedback.style.display = 'block';
