@@ -1439,13 +1439,13 @@ async function deleteCert(id) {
 async function getProfile() {
   const defaultProfile = {
     id: 'main_profile',
-    about_subtitle: 'Disciplina, Resiliencia y Enfoque Técnico',
-    about_text_1: 'Mi trayectoria profesional está guiada por la firme convicción de que los mejores resultados técnicos nacen de la constancia y la organización rigurosa. A lo largo de mi formación, he consolidado habilidades duras en el desarrollo frontend y el análisis computacional.',
-    about_text_2: 'Busco integrar la velocidad de desarrollo de frameworks modernos de JavaScript con la automatización inteligente y el análisis predictivo por medio de Inteligencia Artificial.',
-    highlight_1_title: 'Servicio Militar de Honor',
-    highlight_1_desc: 'Mi paso por el servicio militar me enseñó la importancia del trabajo en equipo coordinado, la adaptabilidad bajo alta presión laboral y el cumplimiento estricto de directrices con excelencia.',
-    highlight_2_title: 'Competencia Global en Inglés',
-    highlight_2_desc: 'He completado estudios avanzados en el idioma inglés, lo que me capacita para comprender documentación técnica de alto nivel, coordinar con equipos multiculturales y desempeñarme internacionalmente con soltura (Nivel C1/B2).'
+    about_subtitle: 'Ingeniería de Sistemas | Inteligencia Artificial, Desarrollo de Software, Contenido Digital y Optimización de Procesos.',
+    about_text_1: 'Estudiante de Ingeniería de Sistemas con experiencia interdisciplinaria que abarca ingeniería de software, inteligencia artificial, sistemas empresariales, optimización de procesos de negocio y estrategia de contenido digital. Especializada en el desarrollo de aplicaciones web full-stack, soluciones basadas en IA y modelos de procesos de negocio, aplicando decisiones basadas en datos para optimizar el rendimiento organizacional.',
+    about_text_2: 'Apasionada por la innovación tecnológica, el desarrollo frontend moderno y la integración de Inteligencia Artificial para resolver problemas del mundo real. Mi formación como Técnico Medio en Turismo y Hotelería me ha brindado una sólida orientación al servicio al cliente, la gestión organizativa y la administración de recursos. Gracias a mi participación en el Aspire Leaders Program (fundado por profesores de Harvard) y mi preparación militar, he desarrollado sólidas habilidades de liderazgo estratégico, disciplina operativa y resiliencia para afrontar y superar con excelencia los desafíos tecnológicos más complejos.',
+    highlight_1_title: 'Aspire Leaders Program (Harvard)',
+    highlight_1_desc: 'Seleccionada como miembro (Global Cohort Fellow 2026) del prestigioso programa internacional fundado por profesores de la Universidad de Harvard, validando habilidades avanzadas de pensamiento crítico, comunicación persuasiva e impacto social.',
+    highlight_2_title: 'Excelencia Académica y Militar',
+    highlight_2_desc: 'Primer lugar de promoción en Ingeniería de Sistemas con un promedio de 98.3/100. Formación militar que forja la disciplina operativa, el trabajo en equipo bajo presión y una alta resiliencia para la ejecución de proyectos.'
   };
 
   if (supabaseClient) {
