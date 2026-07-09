@@ -397,12 +397,14 @@ button {
 .hero-container {
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: space-between;
+  gap: 60px;
+  text-align: left;
 }
 
 .hero-content {
-  max-width: 800px;
+  flex: 1.2;
+  max-width: 100%;
 }
 
 .badge-accent {
@@ -443,7 +445,7 @@ button {
 .hero-actions {
   display: flex;
   gap: 16px;
-  justify-content: center;
+  justify-content: flex-start;
   margin-bottom: 60px;
 }
 
@@ -451,7 +453,7 @@ button {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   max-width: 550px;
-  margin: 0 auto;
+  margin: 0;
   padding: 24px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -484,6 +486,51 @@ button {
 .stat-label {
   font-size: 0.85rem;
   color: var(--text-secondary);
+}
+
+.hero-image {
+  flex: 0.8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.avatar-frame {
+  width: 320px;
+  height: 320px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 4px solid var(--glass-border);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.25);
+  position: relative;
+  transition: transform var(--transition-normal);
+  background: var(--glass-bg);
+}
+
+.avatar-frame::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: var(--radius-full);
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.avatar-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.avatar-frame:hover {
+  transform: scale(1.03);
+}
+
+.avatar-frame:hover img {
+  transform: scale(1.05);
 }
 
 /* --- Projects Section --- */
@@ -1384,6 +1431,11 @@ button {
 }
 
 @media (max-width: 640px) {
+  .avatar-frame {
+    width: 250px;
+    height: 250px;
+  }
+
   .certs-grid .project-card {
     flex-direction: column;
   }
@@ -1800,6 +1852,20 @@ button {
 /* --- Responsive Media Queries --- */
 
 @media (max-width: 1024px) {
+  .hero-container {
+    flex-direction: column-reverse;
+    text-align: center;
+    gap: 40px;
+  }
+  
+  .hero-actions {
+    justify-content: center;
+  }
+  
+  .hero-stats {
+    margin: 0 auto;
+  }
+
   .hero-title {
     font-size: 3rem;
   }
