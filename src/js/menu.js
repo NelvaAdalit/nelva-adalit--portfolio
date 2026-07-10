@@ -184,6 +184,9 @@ function updateCartUI() {
   if (countLabel) countLabel.innerText = `${totalItems} ${totalItems === 1 ? 'ítem' : 'ítems'}`;
   if (priceLabel) priceLabel.innerText = `${totalPrice} Bs.`;
 
+  const qrTotalLabel = document.getElementById("qr-total-amount");
+  if (qrTotalLabel) qrTotalLabel.innerText = `${totalPrice} Bs.`;
+
   // Enable/Disable Checkout Button
   if (btnCheckout) {
     if (totalItems > 0) {
@@ -388,7 +391,7 @@ function sendOrder() {
   }
 
   text += `\n💰 *Total a pagar:* ${subtotal} Bs.\n\n`;
-  text += `¿Me confirman su disponibilidad y cuenta para transferencia / QR? ¡Gracias!`;
+  text += `📎 *Adjunto:* En este momento les envío el comprobante del pago por transferencia/QR.\n\n¿Me confirman la recepción de la transferencia y el pedido? ¡Muchas gracias!`;
 
   const url = `https://api.whatsapp.com/send?phone=${rincónWhatsappNumber}&text=${encodeURIComponent(text)}`;
   window.open(url, "_blank");
