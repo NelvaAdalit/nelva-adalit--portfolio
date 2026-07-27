@@ -1442,11 +1442,11 @@ async function getProfile() {
     id: 'main_profile',
     about_subtitle: 'Ingeniería de Sistemas | Inteligencia Artificial, Desarrollo de Software, Contenido Digital y Optimización de Procesos.',
     about_text_1: 'Estudiante de Ingeniería de Sistemas con experiencia interdisciplinaria que abarca ingeniería de software, inteligencia artificial, sistemas empresariales, optimización de procesos de negocio y estrategia de contenido digital. Especializada en el desarrollo de aplicaciones web full-stack, soluciones basadas en IA y modelos de procesos de negocio, aplicando decisiones basadas en datos para optimizar el rendimiento organizacional.',
-    about_text_2: 'Apasionada por la innovación tecnológica, el desarrollo frontend moderno y la integración de Inteligencia Artificial para resolver problemas del mundo real. Mi formación como Técnico Medio en Turismo y Hotelería me ha brindado una sólida orientación al servicio al cliente, la gestión organizativa y la administración de recursos. Gracias a mi participación en el Aspire Leaders Program (fundado por profesores de Harvard) y mi preparación militar, he desarrollado sólidas habilidades de liderazgo estratégico, disciplina operativa y resiliencia para afrontar y superar con excelencia los desafíos tecnológicos más complejos.',
+    about_text_2: 'Apasionada por la innovación tecnológica, el desarrollo frontend moderno y la integración de Inteligencia Artificial para resolver problemas del mundo real. Mi formación como Técnico Medio en Turismo y Hotelería me ha brindado una sólida orientación al servicio al cliente, la gestión organizativa y la administración de recursos. Gracias a mi participación en el Aspire Leaders Program (fundado por profesores de Harvard), he desarrollado sólidas habilidades de liderazgo estratégico, trabajo en equipo, gestión operativa y resiliencia para afrontar y superar con excelencia los desafíos tecnológicos más complejos.',
     highlight_1_title: 'Aspire Leaders Program (Harvard)',
     highlight_1_desc: 'Seleccionada como miembro (Global Cohort Fellow 2026) del prestigioso programa internacional fundado por profesores de la Universidad de Harvard, validando habilidades avanzadas de pensamiento crítico, comunicación persuasiva e impacto social.',
-    highlight_2_title: 'Excelencia Académica y Militar',
-    highlight_2_desc: 'Primer lugar de promoción en Ingeniería de Sistemas con un promedio de 98.3/100. Formación militar que forja la disciplina operativa, el trabajo en equipo bajo presión y una alta resiliencia para la ejecución de proyectos.'
+    highlight_2_title: 'Alto Rendimiento Académico',
+    highlight_2_desc: 'Primer lugar de promoción en Ingeniería de Sistemas con un promedio de 98.3/100. Sólido compromiso con la excelencia técnica, el aprendizaje continuo y la resolución efectiva de problemas bajo presión.'
   };
 
   if (supabaseClient) {
