@@ -44,11 +44,41 @@ const DEFAULT_PROJECTS = [
     techs: "OpenAI, Node.js, Supabase",
     codeLink: "https://github.com",
     demoLink: "https://vercel.app"
+  },
+  {
+    id: "seed-proj-wtm-2026",
+    title: "Estrategia de Contenido & Marketing Digital – IWD Sucre 2026 (WTM & GDG Sucre)",
+    category: "design:featured",
+    image: "/images/c.jpg",
+    description: "Planificación y desarrollo del calendario editorial y producción audiovisual multicanal (IG, FB, X) para el evento IWD Sucre 2026 (#BreakThePattern). Creación de guiones, reels de speakers (Sara Salazar, Melvy Ancieta, Belen Camargo, Nataly Gemio, Sharon Alvarado), campañas de paquetes (Build/Break Mode) y captación de patrocinadores.",
+    techs: "Content Strategy, Copywriting, Video Editing, Social Media Growth, WTM / GDG Sucre",
+    codeLink: "https://wtm.gdgsucre.com/",
+    demoLink: "https://drive.google.com/drive/folders/1Z_Iq_KCH8gUAFqOqsgBqP_d4N_XDQ4sZ?usp=sharing"
+  },
+  {
+    id: "seed-proj-qa-trainee",
+    title: "Aseguramiento de Calidad y Pruebas Remotas – QA Trainee",
+    category: "qa:featured",
+    image: "/images/c.jpg",
+    description: "Diseño, redacción y ejecución progresiva de casos de prueba (test cases) enfocados en la mejora continua de la calidad del software. Identificación, documentación y reporte estructurado de bugs utilizando Kiwi TCMS para la derivación precisa de tickets al equipo de desarrollo. Ejecución de pruebas en entornos de red seguros y de forma remota mediante la conexión de túneles con Tailscale. Integración con Taiga para gestión de proyectos ágil.",
+    techs: "Test Cases, Kiwi TCMS, Tailscale, Taiga, Bug Tracking, Agile",
+    codeLink: "https://taiga.io",
+    demoLink: "https://kiwitcms.org"
   }
 ];
 
 // --- Seed Data (Default Certifications) ---
 const DEFAULT_CERTIFICATIONS = [
+  {
+    id: "seed-cert-wtm-2026",
+    title: "Voluntaria y Content Lead - Women Techmakers (IWD Sucre 2026)",
+    issuer: "Women Techmakers (WTM Sucre) & Google Developer Groups (GDG Sucre)",
+    category: "Voluntariado y Liderazgo Tech",
+    description: "Voluntaria activa en la organización, planificación estratégica de contenidos, redacción de guiones/copys, creación de reels promocionales y gestión de campañas de patrocinio (Silver, Gold, Platinum) para el evento internacional IWD Sucre 2026 (International Women's Day) bajo el lema #BreakThePattern en la Facultad de Tecnología USFX.",
+    credentialId: "WTM-IWD-2026-SUCRE",
+    verifyLink: "https://wtm.gdgsucre.com/",
+    image: "/images/c.jpg"
+  },
   {
     id: "seed-cert-1",
     title: "Desarrollador Frontend Certificado",
@@ -857,6 +887,7 @@ function getCategoryName(cat) {
     case 'ai': return 'Inteligencia Artificial';
     case 'design': return 'Diseño & Multimedia';
     case 'process': return 'Bizagi & UML';
+    case 'qa': return 'QA & Testing';
     default: return baseCat || 'Desarrollo';
   }
 }
@@ -864,6 +895,10 @@ function getCategoryName(cat) {
 function getTechIcon(tech) {
   if (!tech) return 'code';
   const t = tech.toLowerCase();
+  if (t.includes('kiwi') || t.includes('test') || t.includes('qa') || t.includes('quality')) return 'shield-check';
+  if (t.includes('bug') || t.includes('tracking')) return 'bug';
+  if (t.includes('tailscale') || t.includes('network') || t.includes('vpn') || t.includes('tunnel')) return 'shield';
+  if (t.includes('taiga') || t.includes('agile') || t.includes('scrum') || t.includes('kanban')) return 'layout-grid';
   if (t.includes('node')) return 'server';
   if (t.includes('supabase') || t.includes('database') || t.includes('postgres') || t.includes('sql')) return 'database';
   if (t.includes('vercel')) return 'triangle';

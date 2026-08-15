@@ -17,17 +17,17 @@
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   
-  /* Brand/Accents */
-  --color-primary: #6366f1; /* Indigo */
-  --color-secondary: #3b82f6; /* Blue */
-  --color-accent: #06b6d4; /* Cyan */
+  /* Brand/Accents - ADALIT TECH Signature Palette */
+  --color-primary: #8b5cf6; /* Electric Violet */
+  --color-secondary: #6366f1; /* Deep Indigo */
+  --color-accent: #00d2ff; /* Neon Cyan */
   --color-success: #10b981; /* Emerald */
   
   /* Gradients */
-  --grad-primary: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-  --grad-accent: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
-  --grad-glow: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(6, 182, 212, 0.15));
-  --grad-text: linear-gradient(135deg, #a5b4fc, #38bdf8, #818cf8);
+  --grad-primary: linear-gradient(135deg, #a855f7, #38bdf8);
+  --grad-accent: linear-gradient(135deg, #7c3aed, #00d2ff);
+  --grad-glow: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(0, 210, 255, 0.25));
+  --grad-text: linear-gradient(135deg, #c084fc, #38bdf8, #e879f9);
   
   /* Glassmorphism */
   --glass-bg: rgba(15, 23, 42, 0.65);
@@ -129,7 +129,7 @@ button {
   max-height: 600px;
   border-radius: var(--radius-full);
   filter: blur(140px);
-  opacity: 0.12;
+  opacity: 0.22;
   pointer-events: none;
   z-index: -1;
 }
@@ -713,8 +713,20 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: auto;
-  margin-bottom: 24px;
+  max-height: 84px;
+  overflow-y: auto;
+  margin-top: 12px;
+  margin-bottom: 20px;
+  padding-right: 4px;
+}
+
+.project-tech-tags::-webkit-scrollbar {
+  width: 4px;
+}
+
+.project-tech-tags::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
 }
 
 .tech-tag {
@@ -745,6 +757,7 @@ button {
 .project-links {
   display: flex;
   gap: 12px;
+  margin-top: auto;
 }
 
 .project-links .cert-more-btn {
@@ -1398,34 +1411,26 @@ button {
   line-height: 1.5;
 }
 
-/* --- Certificaciones (Layout Horizontal) --- */
+/* --- Certificaciones Grid (Responsive Uniform Cards) --- */
 .certs-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 2rem;
-}
-
-@media (min-width: 1024px) {
-  .certs-grid {
-    grid-template-columns: 1fr 1fr; /* 2 columnas de tarjetas horizontales en desktop */
-  }
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 30px;
 }
 
 .certs-grid .project-card {
   display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  min-height: 240px;
+  flex-direction: column;
   height: 100%;
 }
 
 .certs-grid .project-card .project-img-wrapper {
-  flex: 1;
-  max-width: 200px;
-  min-width: 150px;
-  height: auto;
-  min-height: 100%;
-  aspect-ratio: auto;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16/10;
+  width: 100%;
+  max-width: 100%;
+  min-width: 100%;
 }
 
 .certs-grid .project-card .project-img {
@@ -1435,29 +1440,33 @@ button {
 }
 
 .certs-grid .project-card .project-info {
-  flex: 1.8;
-  padding: 1.5rem;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  height: auto;
+  flex-grow: 1;
+}
+
+.certs-grid .project-card .project-links {
+  margin-top: auto;
+  padding-top: 16px;
 }
 
 .certs-grid .add-project-card {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 240px;
+  min-height: 380px;
   height: 100%;
   border: 2px dashed rgba(255, 255, 255, 0.1);
   background: transparent;
   cursor: pointer;
+  border-radius: var(--radius-lg);
 }
 
 .certs-grid .add-project-card:hover {
-  border-color: var(--accent-color);
-  background: rgba(0, 242, 254, 0.02);
+  border-color: var(--color-accent);
+  background: rgba(0, 210, 255, 0.04);
 }
 
 @media (max-width: 640px) {
@@ -2003,7 +2012,8 @@ button {
     padding: 70px 0;
   }
   
-  .projects-grid {
+  .projects-grid,
+  .certs-grid {
     grid-template-columns: 1fr;
   }
   
